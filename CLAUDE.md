@@ -35,6 +35,9 @@ commit finished work straight to `main`; there is no build step.
   `mw-tour-<slug>-flights` (synced like the lists, so the admin's view-as shows them). The Flights block is empty until
   then, except for a traveler with a `personal` entry, who sees the vault's flights until they add their own.
   Each added flight has a small pencil that opens the sheet on that row to edit it.
+  A ticket with several travelers (a couple on one booking): the signed-in name is matched to a name on it (Mr/Ms …,
+  SURNAME/GIVEN MR; Sara/Sarah, Haim/Chaim count); when each traveler's part holds different flights, only theirs are
+  taken, otherwise the shared ones; the sheet says whose flights these are, or warns when the name is not on the ticket.
 
 ## Rules
 - Every expedition, now and future, has the same interface as Manas & Kaziranga (the reference): a UI change to

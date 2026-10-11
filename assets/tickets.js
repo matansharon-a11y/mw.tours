@@ -91,7 +91,11 @@ function parse(text, opts = {}) {
   const T = String(text || '').replace(/\r/g, '');
   const dates = allDates(T, year);
   const times = []; { const r = /\b([01]?\d|2[0-3]):([0-5]\d)\b/g; let m; while ((m = r.exec(T))) times.push({ i: m.index, t: `${pad(m[1])}:${m[2]}` }); }
-  const aps = []; { const r = /\b([A-Z]{3})\b/g; let m; while ((m = r.exec(T))) if (AIRPORTS.has(m[1])) aps.push({ i: m.index, c: m[1] }); }
+  const aps = []; { const r = /\b([A-Z]{3})\b/g; let m; while ((m = r.exec(T))) {
+    if (!AIRPORTS.has(m[1])) continue;
+    // "STRAZE/SARA MRS": a title, not Marseille
+    if (m[1] === 'MRS' && /\/[A-Z' -]+$/.test(T.slice(T.lastIndexOf('\n', m.index) + 1, m.index))) continue;
+    aps.push({ i: m.index, c: m[1] }); } }
   const fls = []; { const r = /\b([A-Z]{2}|[A-Z]\d|\d[A-Z])\s?-?\s?(\d{2,4})\b/g; let m;
     while ((m = r.exec(T))) { if (AIRPORTS.has(m[1] + m[2][0])) continue; fls.push({ i: m.index, end: m.index + m[0].length, no: `${m[1]} ${+m[2]}` }); } }
   // each flight number owns the text between its neighbours; in it, the airport pair, times and date closest to it
@@ -102,7 +106,10 @@ function parse(text, opts = {}) {
   fls.forEach((f, k) => {
     const lo = k ? fls[k - 1].end : 0, hi = k + 1 < fls.length ? fls[k + 1].i : T.length, at = (f.i + f.end) / 2;
     const near = (list, pos) => list.slice().sort((x, y) => Math.abs(pos(x) - at) - Math.abs(pos(y) - at));
-    const pair = near(pairs.filter(p => p.a.i >= lo && p.b.i < hi && Math.abs(p.mid - at) < 500), p => p.mid)[0];
+    // a pair printed on the flight number's own line wins ("LY 082  20 NOV  DEL 10:20  TLV 14:05")
+    const fl0 = T.lastIndexOf('\n', f.i) + 1, fl1 = (T.indexOf('\n', f.i) + 1 || T.length + 1) - 1;
+    const cand = pairs.filter(p => p.a.i >= lo && p.b.i < hi && Math.abs(p.mid - at) < 500), same = cand.filter(p => p.a.i >= fl0 && p.b.i <= fl1);
+    const pair = near(same.length ? same : cand, p => p.mid)[0];
     if (!pair) return;
     // times: from the line of the first airport to the end of the line of the second (dep, then arrival)
     const ls = T.lastIndexOf('\n', pair.a.i) + 1, le = (T.indexOf('\n', pair.b.i) + 1 || T.length + 1) - 1;
@@ -131,13 +138,61 @@ function parse(text, opts = {}) {
     .sort((a, b) => (a.iso + a.time).localeCompare(b.iso + b.time));
 }
 
+// ---------- whose ticket: a booking can hold several travelers (a couple on one ticket) ----------
+const TITLE = '(?:mrs|mr|ms|miss|mstr|master|dr)';
+const NOTNAME = new Set(['adult', 'child', 'infant', 'seat', 'meal', 'economy', 'business', 'premium', 'flex', 'regular', 'saver', 'traveller', 'traveler', 'passenger']);
+const nameWords = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z\u0590-\u05ff]+/).filter(Boolean);
+const cap = w => w.charAt(0).toUpperCase() + w.slice(1);
+// the travelers named on a ticket, with where each is printed: "Mr Haim Straze", "STRAZE/HAIM MR"
+function travelers(text) {
+  const T = String(text || ''), found = new Map();
+  const add = (i, given, last) => {
+    const w = nameWords(`${given} ${last}`).filter(x => !NOTNAME.has(x)); if (!w.length || w.length > 5) return;
+    const key = w.join(' '); if (!found.has(key)) found.set(key, { name: w.map(cap).join(' '), words: w, at: [] }); found.get(key).at.push(i);
+  };
+  let m;
+  const r1 = new RegExp(`\\b${TITLE}\\.?[ \\t]+([A-Z][A-Za-z'’-]+(?:[ \\t]+[A-Z][A-Za-z'’-]+){0,3})`, 'gi');
+  while ((m = r1.exec(T))) { if (/^[A-Z]/.test(m[1])) add(m.index, m[1], ''); }
+  const r2 = new RegExp(`\\b([A-Z][A-Z'-]+)\\/([A-Z][A-Z -]*?)[ ]?(?:MRS|MR|MS|MISS|MSTR|DR)\\b`, 'g');
+  while ((m = r2.exec(T))) add(m.index, m[2], m[1]);
+  return [...found.values()];
+}
+// close enough: the same word, or one letter apart in a longer one (Sara/Sarah, Haim/Chaim)
+function near1(a, b) {
+  if (a === b) return true; if (Math.min(a.length, b.length) < 4 || Math.abs(a.length - b.length) > 1) return false;
+  let i = 0, j = 0, d = 0;
+  while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++d > 1) return false; if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } }
+  return d + (a.length - i) + (b.length - j) <= 1;
+}
+function whoIsMe(list, name) {
+  const me = nameWords(name); if (!me.length || !list.length) return null;
+  const score = p => p.words.filter(w => me.some(x => near1(w, x))).length;
+  const ranked = list.map(p => ({ p, n: score(p) })).filter(x => x.n).sort((a, b) => b.n - a.n);
+  if (!ranked.length || (ranked[1] && ranked[1].n === ranked[0].n)) return null;
+  return ranked[0].p;
+}
+// the flights on a ticket for the signed-in traveler. Travelers on one booking usually share every flight; only when
+// each traveler's own part of the ticket holds flights, and they differ, does the traveler get just their own.
+function readTicket(text, opts = {}) {
+  const rows = parse(text, opts), list = travelers(text), me = whoIsMe(list, opts.name);
+  let own = rows;
+  if (me && list.length > 1) {
+    const marks = list.flatMap(p => p.at.map(i => ({ i, p }))).sort((a, b) => a.i - b.i);
+    const partOf = p => marks.map((k, n) => k.p === p ? text.slice(k.i, (marks.slice(n + 1).find(x => x.p !== p) || { i: text.length }).i) : '').filter(Boolean).join('\n');
+    const each = list.map(p => ({ p, rows: parse(partOf(p), opts) }));
+    const key = r => (r.flight || r.from + r.to) + r.iso, mine = each.find(x => x.p === me).rows;
+    if (each.every(x => x.rows.length) && mine.length < rows.length && mine.every(r => rows.some(q => key(q) === key(r)))) own = mine;
+  }
+  return { rows: own, names: list.map(p => p.name), me: me && me.name, split: own !== rows };
+}
+
 // ---------- checking the flights with the traveler ----------
 const W = {
-  he: { title: 'הטיסות שלכם', noNo: 'מספר הטיסה לא נקרא מהתמונה, הוסיפו אותו ידנית.', reading: 'קוראים את הכרטיס…', found: n => n === 1 ? 'נמצאה טיסה אחת. בדקו שהפרטים נכונים.' : `נמצאו ${n} טיסות. בדקו שהפרטים נכונים.`,
+  he: { title: 'הטיסות שלכם', who: (all, me) => `הכרטיס על שם ${all}. אלה הטיסות של ${me}.`, notMe: (all, me) => `הכרטיס על שם ${all}, והשם ${me} לא מופיע בו. בדקו שזה הכרטיס שלכם.`, noNo: 'מספר הטיסה לא נקרא מהתמונה, הוסיפו אותו ידנית.', reading: 'קוראים את הכרטיס…', found: n => n === 1 ? 'נמצאה טיסה אחת. בדקו שהפרטים נכונים.' : `נמצאו ${n} טיסות. בדקו שהפרטים נכונים.`,
         none: 'לא הצלחנו לקרוא טיסות מהקובץ הזה. אפשר להוסיף אותן כאן ידנית.', failed: 'לא הצלחנו לפתוח את הקובץ. נסו PDF, JPG או PNG.', offline: 'כדי לקרוא כרטיס צריך חיבור לאינטרנט.',
         date: 'תאריך', dep: 'המראה', from: 'מ-', to: 'ל-', no: 'מספר טיסה', arr: 'נחיתה', add: '+ טיסה', more: 'כרטיס נוסף', save: 'שמירה', cancel: 'ביטול', del: 'הסרה',
         clear: 'מחיקת כל הטיסות', clearQ: 'למחוק את כל הטיסות שלכם?', privacy: 'הכרטיס נקרא בטלפון שלכם ולא נשלח לשום מקום.' },
-  en: { title: 'Your flights', noNo: 'The flight number could not be read from the photo, please type it in.', reading: 'Reading your ticket…', found: n => n === 1 ? 'Found 1 flight. Check the details are right.' : `Found ${n} flights. Check the details are right.`,
+  en: { title: 'Your flights', who: (all, me) => `Ticket for ${all}. These are ${me}'s flights.`, notMe: (all, me) => `This ticket is for ${all}, and ${me} is not on it. Check it is your ticket.`, noNo: 'The flight number could not be read from the photo, please type it in.', reading: 'Reading your ticket…', found: n => n === 1 ? 'Found 1 flight. Check the details are right.' : `Found ${n} flights. Check the details are right.`,
         none: "We couldn't read flights from this file. You can add them here by hand.", failed: "We couldn't open that file. Try a PDF, JPG or PNG.", offline: 'Reading a ticket needs an internet connection.',
         date: 'Date', dep: 'Departs', from: 'From', to: 'To', no: 'Flight', arr: 'Lands', add: '+ Flight', more: 'Another ticket', save: 'Save', cancel: 'Cancel', del: 'Remove',
         clear: 'Delete all flights', clearQ: 'Delete all your flights?', privacy: 'Your ticket is read on your phone and is not sent anywhere.' },
@@ -209,12 +264,20 @@ function open(opts = {}) {
       if (!files.length) return;
       if (!navigator.onLine) { msg.className = 'msg warn'; msg.textContent = w.offline; return; }
       busy(true); let found = [], failed = false;
-      for (const file of files) { try { found = found.concat(parse(await textOf(file), { year })); } catch (e) { failed = true; } }
+      const notes = [], and = l => l.length < 2 ? l.join('') : `${l.slice(0, -1).join(', ')} ${w === W.he ? 'ו-' : '& '}${l[l.length - 1]}`;
+      let odd = false;
+      for (const file of files) {
+        try {
+          const r = readTicket(await textOf(file), { year, name: opts.name }); found = found.concat(r.rows);
+          if (r.names.length && opts.name && !r.me) { odd = true; notes.push(w.notMe(and(r.names), opts.name)); }
+          else if (r.names.length > 1 && r.me) notes.push(w.who(and(r.names), r.me));
+        } catch (e) { failed = true; console.warn('ticket', e); }
+      }
       busy(false); read();
       const key = r => (r.flight || r.from + r.to) + r.iso, have = new Set(rows.map(key));
       const fresh = found.filter(r => !have.has(key(r)));
       rows = rows.concat(fresh).sort((a, b) => (a.iso + a.time).localeCompare(b.iso + b.time));
-      if (fresh.length) { msg.className = 'msg'; msg.textContent = w.found(fresh.length) + (fresh.some(r => !r.flight) ? ' ' + w.noNo : ''); }
+      if (fresh.length) { msg.className = odd ? 'msg warn' : 'msg'; msg.textContent = [...notes, w.found(fresh.length), fresh.some(r => !r.flight) ? w.noNo : ''].filter(Boolean).join(' '); }
       else { msg.className = 'msg warn'; msg.textContent = failed ? w.failed : w.none; if (!rows.length) rows.push({}); }
       draw();
     };
@@ -236,6 +299,6 @@ function open(opts = {}) {
   });
 }
 
-root.MWTickets = { parse, open, pickFiles, textOf };
-if (typeof module !== 'undefined' && module.exports) module.exports = { parse, allDates };
+root.MWTickets = { parse, read: readTicket, travelers, open, pickFiles, textOf };
+if (typeof module !== 'undefined' && module.exports) module.exports = { parse, read: readTicket, travelers, whoIsMe, allDates };
 })(typeof window !== 'undefined' ? window : globalThis);
