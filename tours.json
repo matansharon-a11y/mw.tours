@@ -45,6 +45,21 @@
       "end": "2026-11-22",
       "cover": "pyrenees/photos/bearded-vulture.jpg",
       "slug": "pyrenees-2026"
+    },
+    {
+      "path": "iceland/",
+      "title": {
+        "en": "Iceland Northern Lights",
+        "he": "איסלנד · הזוהר הצפוני"
+      },
+      "place": {
+        "en": "Iceland",
+        "he": "איסלנד"
+      },
+      "start": "2026-12-08",
+      "end": "2026-12-17",
+      "cover": "",
+      "slug": "iceland-2026"
     }
   ]
 }

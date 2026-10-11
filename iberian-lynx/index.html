@@ -59,7 +59,7 @@ a{color:inherit}
 .ring .ic{width:18px;height:18px}
 .kind{font:600 11px/1 var(--label);letter-spacing:.22em;text-transform:uppercase;color:var(--gold-soft)}
 [dir=rtl] .kind{font:600 13px/1 var(--sans);letter-spacing:.02em}
-.k-wildlife{--k:var(--leaf)} .k-conservation{--k:#8FD3C1} .k-legend{--k:var(--amber)} .k-history{--k:var(--fog)} .k-culture{--k:var(--gold-soft)} .k-food{--k:var(--sunset)} .k-place{--k:var(--paper)}
+.k-wildlife{--k:var(--leaf)} .k-conservation{--k:#8FD3C1} .k-legend{--k:var(--amber)} .k-history{--k:var(--fog)} .k-culture{--k:var(--gold-soft)} .k-food{--k:var(--sunset)} .k-place{--k:var(--paper)} .k-landscape{--k:var(--fog-light)} .k-sky{--k:#86E0B4}
 .kind[class*=k-]{color:var(--k)}
 .k .ring,.story>.k .ring{color:var(--k,var(--paper));border-color:color-mix(in srgb,var(--k,var(--paper)) 62%,transparent)}
 figure.ph{margin:0;position:relative;overflow:hidden;border-radius:14px;background:#14120F}
@@ -744,7 +744,7 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M4.5 19.5h15"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M10.5 18.5h3"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4.5 18.5V6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-10z"/><path d="M8.5 9.5h7m-7 3.5h4.5"/></symbol>
-  <symbol id="i-film" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="m10 9.2 5 2.8-5 2.8z"/></symbol><symbol id="i-pen" viewBox="0 0 24 24"><path d="M14.5 5.5l4 4M4 20l1-4.5L15.8 4.7a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L8.5 19 4 20z"/></symbol>
+  <symbol id="i-peak" viewBox="0 0 24 24"><path d="M2.5 19.5 9 8.5l3.6 6 2.4-3.6 6.5 8.6z"/><path d="m7.2 11.6 1.8 1.4 1.6-1.6"/></symbol><symbol id="i-film" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="m10 9.2 5 2.8-5 2.8z"/></symbol><symbol id="i-pen" viewBox="0 0 24 24"><path d="M14.5 5.5l4 4M4 20l1-4.5L15.8 4.7a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L8.5 19 4 20z"/></symbol>
 </svg>
 
 <div id="app">
@@ -895,7 +895,7 @@ const UI = {
     airport: 'שדה תעופה', stop: 'תחנה במסע', next: 'הבא', prev: 'הקודם', of: (a, b) => `${a} מתוך ${b}`, seenMark: name => `ראיתי ${name}`,
     nextDay: 'היום הבא', prevDay: 'היום הקודם', hint: 'בחרו יום, או לחצו על נקודה במפה.',
     s: { kicker: 'אגדות, תרבות וחיות בר', title: ['סיפורים', 'מהדרך'], lede: 'מה שכדאי לדעת על המקומות שנעבור בהם, ועל מי שחיים בהם. כל סיפור מסומן גם על המפה.', all: 'הכול', onMap: 'על המפה',
-      kinds: { wildlife: 'חיות בר', conservation: 'שימור', legend: 'אגדות', culture: 'תרבות', history: 'היסטוריה', food: 'אוכל' } },
+      kinds: { wildlife: 'חיות בר', conservation: 'שימור', legend: 'אגדות', culture: 'תרבות', history: 'היסטוריה', food: 'אוכל', landscape: 'נוף', sky: 'שמיים' } },
     i: { kicker: 'לפני שיוצאים', title: ['חשוב', 'לדעת'], lede: 'כל מה שצריך להכין, במקום אחד. הרשימות נשמרות בטלפון שלכם.', flights: 'טיסות', stays: 'לינה', weather: 'מזג אוויר',
       morning: 'בבוקר', day: 'במהלך היום', yes: 'כלול', no: 'לא כלול', of: (a, b) => `${a}/${b}`, map: 'נתוני המפה',
       days: 'יום אחר יום', cal: 'הוספה ליומן', lists: 'רשימות הציוד', here: 'עכשיו בישראל', there: n => `עכשיו ב${n}`, ahead: h => `מקדים את ישראל ב-${h} שעות`, behind: h => h === '1' ? 'שעה אחת אחרי ישראל' : `${h} שעות אחרי ישראל`, same: 'אותה שעה כמו בישראל',
@@ -930,7 +930,7 @@ const UI = {
     airport: 'Airport', stop: 'On the route', next: 'Next', prev: 'Previous', of: (a, b) => `${a} of ${b}`, seenMark: name => `Seen: ${name}`,
     nextDay: 'Next day', prevDay: 'Previous day', hint: 'Pick a day, or tap anything on the map.',
     s: { kicker: 'Legends, culture and wildlife', title: ['Stories', 'from the road'], lede: 'What is worth knowing about the places we pass through, and the people and animals who live there. Every story is also pinned on the map.', all: 'All', onMap: 'On the map',
-      kinds: { wildlife: 'Wildlife', conservation: 'Conservation', legend: 'Legend', culture: 'Culture', history: 'History', food: 'Food' } },
+      kinds: { wildlife: 'Wildlife', conservation: 'Conservation', legend: 'Legend', culture: 'Culture', history: 'History', food: 'Food', landscape: 'Landscape', sky: 'Sky' } },
     i: { kicker: 'Before we go', title: ['Good', 'to know'], lede: 'Everything to prepare, in one place. Your checklists are saved on your phone.', flights: 'Flights', stays: 'Where we stay', weather: 'Weather',
       morning: 'Mornings', day: 'Daytime', yes: 'Included', no: 'Not included', of: (a, b) => `${a}/${b}`, map: 'Map data',
       days: 'Day by day', cal: 'Add to calendar', lists: 'Packing lists', here: 'Now in Israel', there: n => `Now in ${n}`, ahead: h => `${h} hours ahead of Israel`, behind: h => h === '1' ? 'One hour behind Israel' : `${h} hours behind Israel`, same: 'Same time as Israel',
@@ -949,7 +949,7 @@ const UI = {
 };
 // a tour can reword any interface string: "ui": {"he": {"s": {"kicker": "…"}}}
 const deepMerge = (a, b) => { for (const [k, v] of Object.entries(b || {})) a[k] = v && typeof v === 'object' && !Array.isArray(v) && a[k] && typeof a[k] === 'object' ? deepMerge(a[k], v) : v; return a; };
-const KIND_ICON = { wildlife: 'leaf', conservation: 'health', legend: 'book', culture: 'weave', history: 'pillar', food: 'bowl' };
+const KIND_ICON = { wildlife: 'leaf', conservation: 'health', legend: 'book', culture: 'weave', history: 'pillar', food: 'bowl', landscape: 'peak', sky: 'spark' };
 
 let lang = store.get('mw-tour-lang') === 'en' ? 'en' : 'he';
 let T = null, tab = 'route', L = UI[lang];
@@ -1832,7 +1832,7 @@ function renderAll() {
   $('#top-name').textContent = `${title.a} ${title.b}`;
   $$('#tabs button').forEach(b => { b.lastElementChild.textContent = L.tabs[b.dataset.tab]; });
   [['#ctl-opening', L.opening], ['#ctl-all', L.all], ['#ctl-assam', L.regionView(T.region[lang])]].forEach(([s, t]) => { $(s).setAttribute('aria-label', t); $(s).title = t; });
-  $('#credit').textContent = [GEO.credit, 'Terrain Tiles (AWS)', 'Natural Earth'].filter(Boolean).join(' · ');
+  $('#credit').textContent = (GEO.credits || [GEO.credit, 'Terrain Tiles (AWS)', 'Natural Earth']).filter(Boolean).join(' · ');
   closePop();
   renderChip(); renderTimeline(); renderCard(); renderStories(); renderField(); renderInfo(); renderLeader(); renderFilter(); buildOverlay(); markStops(); render();
 }
@@ -2216,7 +2216,7 @@ function renderInfo() {
     <section class="block" id="blk-weather" style="--i:5"><div class="bh"><span class="ring">${ic('sun')}</span><h3>${I.weather}</h3></div>
       <div class="wx">${weatherSVG(wx)}<p>${esc(wx[lang])}</p></div></section>
     <div class="egrid" style="--i:6">${ess}${phr}${inViewer ? '' : inst}</div>
-    <p class="mapnote" style="--i:7">${esc(I.map)}: ${esc([GEO.credit, L.credit].filter(Boolean).join(' · '))}</p>
+    <p class="mapnote" style="--i:7">${esc(I.map)}: ${esc((GEO.credits || [GEO.credit, L.credit]).filter(Boolean).join(' · '))}</p>
   </div>`;
   renderClocks();
 }
@@ -2271,15 +2271,17 @@ $('#info').addEventListener('click', e => {
   const dm = e.target.closest('[data-daymap]'); if (dm) { backDay = -1; backRoom = { tab: 'info', day: +dm.dataset.daymap }; setTab('route'); setPlaying(false); goDay(+dm.dataset.daymap); return; }
 });
 function weatherSVG(wx) {
+  // a range like −4–0°, kept left to right (and with a real minus) in Hebrew too
+  const rg = (a, b) => `\u2066${String(a).replace('-', '\u2212')}–${String(b).replace('-', '\u2212')}°\u2069`;
   const I = L.i, rtl = lang === 'he';
   const a = rtl ? [250, 96] : [30, 96], b = rtl ? [30, 96] : [250, 96];
-  return `<svg viewBox="0 0 280 140" role="img" aria-label="${esc(`${I.morning} ${wx.morning[0]}–${wx.morning[1]}°, ${I.day} ${wx.day[0]}–${wx.day[1]}°`)}">
+  return `<svg viewBox="0 0 280 140" role="img" aria-label="${esc(`${I.morning} ${rg(wx.morning[0], wx.morning[1])}, ${I.day} ${rg(wx.day[0], wx.day[1])}`)}">
     <path d="M30 96 Q140 -8 250 96" fill="none" stroke="rgba(254,251,241,.35)" stroke-width="1.2" stroke-dasharray="2 5" stroke-linecap="round"/>
     <circle cx="${a[0]}" cy="${a[1]}" r="4" fill="#9CB1C2"/><circle cx="${b[0]}" cy="${b[1]}" r="6" fill="#E8A23E"/>
     <g transform="translate(128 28)" fill="none" stroke="#E8A23E" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 2.5v2.5m0 14v2.5M2.5 12H5m14 0h2.5M5.3 5.3 7 7m10 10 1.7 1.7m0-13.4L17 7M7 17l-1.7 1.7"/></g>
-    <text x="${a[0]}" y="124" text-anchor="middle" fill="#F4F4F4" font-size="17" font-weight="700" font-family="Google Sans, Arial">${wx.morning[0]}–${wx.morning[1]}°</text>
+    <text x="${a[0]}" y="124" text-anchor="middle" fill="#F4F4F4" font-size="17" font-weight="700" font-family="Google Sans, Arial">${rg(wx.morning[0], wx.morning[1])}</text>
     <text x="${a[0]}" y="80" text-anchor="middle" fill="rgba(244,244,244,.6)" font-size="12" font-family="Google Sans, Arial">${esc(I.morning)}</text>
-    <text x="${b[0]}" y="124" text-anchor="middle" fill="#F4F4F4" font-size="17" font-weight="700" font-family="Google Sans, Arial">${wx.day[0]}–${wx.day[1]}°</text>
+    <text x="${b[0]}" y="124" text-anchor="middle" fill="#F4F4F4" font-size="17" font-weight="700" font-family="Google Sans, Arial">${rg(wx.day[0], wx.day[1])}</text>
     <text x="${b[0]}" y="80" text-anchor="middle" fill="rgba(244,244,244,.6)" font-size="12" font-family="Google Sans, Arial">${esc(I.day)}</text>
   </svg>`;
 }

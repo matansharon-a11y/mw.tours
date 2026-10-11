@@ -8,11 +8,11 @@ commit finished work straight to `main`; there is no build step.
 - `index.html`: landing page ("Which expedition are you joining?"), lists the tours from `tours.json`.
 - `tours.json`: one entry per expedition: `path` (folder), `slug` (the id inside that page's
   `<script id="vault">`), `title`/`place` in `en` and `he`, `start`/`end` (YYYY-MM-DD), `cover`.
-- `<tour>/index.html` (`manas-kaziranga/`, `iberian-lynx/`, `pyrenees/`): one expedition each, with its
+- `<tour>/index.html` (`manas-kaziranga/`, `iberian-lynx/`, `pyrenees/`, `iceland/`): one expedition each, with its
   own `img/`, `map/`, `photos/`. The trip content is encrypted in `<script id="vault">` with the
   expedition code (PBKDF2 + AES-GCM); never try to read or guess codes, and never write a code into a file.
 - `assets/members.js`: loaded by every tour. Traveler name on the code screen, Supabase sync of lists and
-  progress, group photo uploads on the Field cards. When you change it, bump `?v=` in the three tour pages.
+  progress, group photo uploads on the Field cards. When you change it, bump `?v=` in every tour page.
 - `admin/`: Matan's admin (Supabase login): connect an expedition once with its code, see the code,
   add the traveler list (only a name on it can join: first, middle or last name, then the code; an empty
   list means no one can join; the first sign-in needs a connection, there is no code-only way in),
@@ -30,6 +30,11 @@ commit finished work straight to `main`; there is no build step.
   optional `phone` image + `phoneFocus` when the subject would sit under the title on a phone.
 - Leader: optional `leader.story` {he, en: {kicker, by, text[]}}, shown in the text column beside the photo.
 - No photo beside the Flights block.
+- Story kinds: wildlife, conservation, legend, culture, history, food, landscape, sky (the last two came with Iceland).
+- A tour without photos yet works: no `heroes` = plain room headers, stories/field cards show the contour placeholder,
+  `tours.json` `cover: ""` shows an icon. Iceland (`iceland-2026`) is like that until Matan sends photos.
+- Map layers (`map/*.webp` + the `geo` block): Iceland's are drawn, not satellite (Natural Earth land/glaciers, geoBoundaries
+  coast, shaded relief), detail layers fade at their edges; `geo.credits` replaces the default credit line.
 - Flight tickets: "Add your flight ticket" beside "Add to calendar" (`assets/tickets.js`, read in the browser: pdf.js for
   PDFs, Tesseract OCR for JPG/PNG; nothing is uploaded). The traveler checks the rows, they are kept in
   `mw-tour-<slug>-flights` (synced like the lists, so the admin's view-as shows them). The Flights block is empty until
