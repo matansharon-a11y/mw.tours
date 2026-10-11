@@ -95,6 +95,14 @@ function mergeVal(server, local) {
   } catch (e) {}
   return local;
 }
+// the lists, field marks and flights on this browser belong to one traveler. When someone else signs in here,
+// they start clean (their own saved state comes from the server) instead of taking over the last person's data.
+const OWNER = KEY + '-owner';
+function adopt(id, wasMine) {
+  const owner = ls.get(OWNER);
+  if (owner !== String(id) && !(owner == null && wasMine)) PARTS.forEach(p => { try { localStorage.removeItem(KEY + '-' + p); } catch (e) {} });
+  ls.set(OWNER, String(id));
+}
 const collect = () => { const o = {}; PARTS.forEach(p => { const v = ls.get(KEY + '-' + p); if (v != null) o[p] = v; }); return o; };
 function applyState(state) {
   let changed = false;
@@ -162,6 +170,7 @@ function mountGate() {
         return;
       }
       ls.set(NAME, name);
+      adopt(r.member_id, false);
       member = { id: r.member_id, name: r.name }; ls.set(ME, JSON.stringify(member)); viewer = true;
       applyState(r.state);
       ls.set(KEY + '-code', norm(r.secret));
@@ -189,6 +198,7 @@ async function resume() {
       // and if that isn't possible, back to the name + code screen
       const j = ls.get(NAME) ? await rpc('join_tour', { p_slug: SLUG, p_code: code, p_name: ls.get(NAME) }) : null;
       if (j && !j.error) {
+        adopt(j.member_id, member && member.id === j.member_id);
         member = { id: j.member_id, name: j.name }; ls.set(ME, JSON.stringify(member)); viewer = true;
         if (applyState(j.state) || !gateOpen()) { await save(); return reopen(); }   // reopen with their lists and their own flights
         save(); decorate(true); loadPhotos(); return;
@@ -202,6 +212,7 @@ async function resume() {
       decorate(true); if (viewer) loadPhotos(); return;
     }
     const before = (member && member.name) || '';
+    adopt(r.member_id, !!member && member.id === r.member_id);
     member = { id: r.member_id, name: r.name }; ls.set(ME, JSON.stringify(member)); viewer = true;
     const changed = applyState(r.state) || (before !== r.name && !gateOpen());   // a new name can mean their own flights
     const codeNow = norm(ls.get(KEY + '-code')), key = norm(r.secret);
@@ -433,6 +444,7 @@ function askName() {
       await timeout(session(), 9000);
       const r = await timeout(rpc('join_tour', { p_slug: SLUG, p_code: ls.get(KEY + '-code') || '', p_name: name }), 9000);
       if (r && r.error) { go.disabled = false; go.textContent = w.go; msg.textContent = r.error === 'tour_not_ready' ? w.notReady : r.error === 'too_many_attempts' ? w.many : r.error === 'wrong_code' ? w.codeChanged : r.error === 'name_not_listed' ? w.notListed : r.error === 'name_ambiguous' ? w.ambiguous : r.error === 'bad_name' ? w.needName : w.tryLater + ' (' + r.error + ')'; return; }
+      adopt(r.member_id, true);   // what they did here before joining is theirs
       ls.set(NAME, name); member = { id: r.member_id, name: r.name }; ls.set(ME, JSON.stringify(member)); viewer = true;
       names[member.id] = member.name;
       close();
