@@ -433,6 +433,7 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
 .fl .r small{font:500 12px/1 var(--sans);letter-spacing:0;color:var(--faint)}
 .fl .no{font-size:13px;color:var(--gold-soft);text-align:end}
 .fl.pending{opacity:.6}
+.myfl{display:flex;align-items:center;gap:8px;margin:8px 0 0;font-size:14px;color:var(--gold-soft)}.myfl .ic{width:15px;height:15px;flex:none;color:var(--amber)}.myfl b{font-weight:600;color:var(--paper)}
 .fl .no:has(.fled){display:flex;align-items:center;justify-content:flex-end;gap:10px}
 .fled{margin-inline-start:auto!important;display:grid;place-items:center;width:32px;height:32px;margin:-6px 0;padding:0;border:1px solid var(--rule);border-radius:50%;background:none;color:var(--faint);cursor:pointer;transition:color .2s,border-color .2s}
 .fled:hover,.fled:focus-visible{color:var(--amber);border-color:var(--amber)}
@@ -900,7 +901,7 @@ const UI = {
       morning: 'בבוקר', day: 'במהלך היום', yes: 'כלול', no: 'לא כלול', of: (a, b) => `${a}/${b}`, map: 'נתוני המפה',
       days: 'יום אחר יום', cal: 'הוספה ליומן', lists: 'רשימות הציוד', here: 'עכשיו בישראל', there: n => `עכשיו ב${n}`, ahead: h => `מקדים את ישראל ב-${h} שעות`, behind: h => h === '1' ? 'שעה אחת אחרי ישראל' : `${h} שעות אחרי ישראל`, same: 'אותה שעה כמו בישראל',
       install: { title: 'שמרו את המסע בטלפון', text: ['באייפון: כפתור השיתוף, ואז "הוספה למסך הבית".', 'באנדרואיד: התפריט, ואז "התקנת אפליקציה".', 'אחרי הפתיחה הראשונה העמוד עובד גם בלי קליטה.'] },
-      calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג',
+      calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג', myFl: 'הטיסה שלך',
       ticket: 'הוספת כרטיס טיסה', ticketEdit: 'עריכת הטיסה', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
       noFlights: 'הטיסות שלכם יופיעו כאן אחרי שתוסיפו את כרטיסי הטיסה (PDF, ‏JPG או PNG). הכרטיס נקרא בטלפון שלכם ולא נשלח לשום מקום.' },
     l: { kicker: 'המדריך שלכם', contact: 'דברו איתי', wa: 'וואטסאפ למתן', waText: 'היי מתן, לגבי המסע', phone: 'טלפון', mail: 'מייל', copy: 'העתקה', copied: 'הועתק', ig: 'אינסטגרם' },
@@ -935,7 +936,7 @@ const UI = {
       morning: 'Mornings', day: 'Daytime', yes: 'Included', no: 'Not included', of: (a, b) => `${a}/${b}`, map: 'Map data',
       days: 'Day by day', cal: 'Add to calendar', lists: 'Packing lists', here: 'Now in Israel', there: n => `Now in ${n}`, ahead: h => `${h} hours ahead of Israel`, behind: h => h === '1' ? 'One hour behind Israel' : `${h} hours behind Israel`, same: 'Same time as Israel',
       install: { title: 'Keep it on your phone', text: ['iPhone: the Share button, then "Add to Home Screen".', 'Android: the menu, then "Install app".', 'After the first visit the page works without signal too.'] },
-      calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion',
+      calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion', myFl: 'Your flight',
       ticket: 'Add your flight ticket', ticketEdit: 'Edit this flight', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
       noFlights: 'Your flights will show here once you add your flight tickets (PDF, JPG or PNG). The ticket is read on your phone and is not sent anywhere.' },
     l: { kicker: 'Your leader', contact: 'Get in touch', wa: 'WhatsApp Matan', waText: 'Hi Matan, about the expedition', phone: 'Phone', mail: 'Email', copy: 'Copy', copied: 'Copied', ig: 'Instagram' },
@@ -1011,6 +1012,51 @@ function personalize(t) {
 }
 // days spent in the same place share one map frame; stepping through them would only zoom.
 // Spread such a run across the place, west to east, so every day visibly moves to its own part of it.
+let RAW = null;
+const buildTrip = () => spreadDays(withTickets(personalize(structuredClone(RAW))));
+// the traveler's own flights shape their days: a flight on a trip day is shown on that day, and a flight before the
+// first day or after the last one adds a day of its own, so the dates on the map follow their ticket
+function withTickets(t) {
+  let rows = [];
+  try { const a = JSON.parse(store.get('mw-tour-' + t.slug + '-flights') || 'null'), me = meId(); if (Array.isArray(a)) rows = a.filter(r => r && r.by === me && r.v === 2 && /^\d{4}-\d\d-\d\d$/.test(r.iso || '')); } catch (e) {}
+  if (!rows.length) return t;
+  rows.sort((a, b) => (a.iso + a.time).localeCompare(b.iso + b.time));
+  const first = t.days[0], last = t.days[t.days.length - 1];
+  const at = code => { const p = Object.values(t.places || {}).find(p => p.code && p.code === code); return p && p.lonlat; };
+  const frameOf = (d, code) => { const ll = at(code); if (ll) return [ll[0] - 0.5, ll[1] - 0.32, ll[0] + 0.5, ll[1] + 0.32]; const st = (d.steps || []).filter(s => s.bbox).pop(); return st ? st.bbox.slice() : null; };
+  // flights after the last day: a day of their own for each date. Flights before the first day: one departure day
+  // (day 0) on the earliest of them, or, when the trip already starts with one, on that day.
+  const added = {}, pre = rows.filter(r => r.iso < first.date);
+  let dep = null;
+  if (pre.length) {
+    if (first.n >= 1) {
+      const f = frameOf(first, pre[0].from);
+      dep = { n: 0, date: pre[0].iso, sun: first.sun, look: [], steps: f ? [{ bbox: f }] : [],
+        he: { label: 'יום היציאה', title: 'יוצאים לדרך', text: 'יום טיסה, לפי הכרטיס שלך.', stay: '' },
+        en: { label: 'Departure', title: 'Setting off', text: 'A flight day, from your ticket.', stay: '' } };
+      t.days.push(dep);
+    } else dep = first;
+  }
+  for (const r of rows) {
+    let d = r.iso < first.date ? dep : t.days.find(x => x.date === r.iso);
+    if (!d) {
+      if (r.iso < last.date) continue;   // a gap inside the trip: nothing to hang it on
+      if (!added[r.iso]) {
+        const f = frameOf(last, r.from);
+        added[r.iso] = { n: 0, date: r.iso, home: true, sun: last.sun, look: [], steps: f ? [{ bbox: f }] : [],
+          he: { label: 'הטיסה שלך', title: 'הטיסה שלך', text: 'יום טיסה, לפי הכרטיס שלך.', stay: '', tag: 'טיסה' },
+          en: { label: 'Your flight', title: 'Your flight', text: 'A flight day, from your ticket.', stay: '', tag: 'Flight' } };
+      }
+      d = added[r.iso];
+    }
+    (d.mine = d.mine || []).push(r.iso === d.date ? r : { ...r, other: r.iso });
+  }
+  Object.values(added).sort((a, b) => a.date.localeCompare(b.date)).forEach((d, i) => { d.n = last.n + 1 + i; t.days.push(d); });
+  t.days.sort((a, b) => a.n - b.n);
+  return t;
+}
+const flightText = r => [r.other ? `${r.other.slice(8, 10)}.${r.other.slice(5, 7)}` : '', r.flight, r.from && r.to ? `${r.from} → ${r.to}` : '', r.time ? r.time + (r.arrive ? '–' + r.arrive : '') : ''].filter(Boolean).join(' · ');
+const myFlightsHTML = d => d.mine ? d.mine.map(r => `<p class="myfl">${ic('plane')}<span><b>${esc(L.i.myFl)}</b> <bdi dir="ltr">${esc(flightText(r))}</bdi></span></p>`).join('') : '';
 function spreadDays(t) {
   const frame = d => d.steps && d.steps.length === 1 && !(d.steps[0].legs || []).length && d.steps[0].bbox ? d.steps[0].bbox.join() : null;
   for (let i = 0; i < t.days.length;) {
@@ -1033,7 +1079,7 @@ async function tryCode(code, quiet) {
   if (!norm(code)) { if (!quiet) err.textContent = L.gateEmpty; return false; }
   btn.disabled = true; btn.firstElementChild.textContent = L.gateBusy; err.textContent = '';
   try {
-    T = spreadDays(personalize(await decrypt(code)));
+    RAW = await decrypt(code); T = buildTrip();
     for (const l of ['he', 'en']) deepMerge(UI[l], T.ui && T.ui[l]);
   } catch (e) {
     if (!quiet) { err.textContent = L.gateErr; form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake'); $('#code').select(); }
@@ -1895,7 +1941,7 @@ function renderCard(anim) {
     const isToday = sun && d.date === todayDate(), cd = isToday ? sunCountdown(sun) : '', xtra = dayExtras(d);
     html = `<div class="ctl"><button type="button" data-cardclose aria-label="${L.close}">${ic('x')}</button></div>
       <div class="c"><div class="hd"><span class="dl">${esc(c.label)}</span><span class="dd">${esc(dateLabel(d.date))}</span></div>
-      <h3>${esc(c.title)}</h3><p>${esc(c.text)}</p>
+      <h3>${esc(c.title)}</h3><p>${esc(c.text)}</p>${myFlightsHTML(d)}
       <div class="ft">${c.stay ? `<span>${ic('bed')}${esc(c.stay)}</span>` : ''}${sun ? `<span class="sun" title="${L.rise} / ${L.set}">${ic('rise')}${sun.rise}<span class="sr">${L.rise}</span> ${ic('set')}${sun.set}<span class="sr">${L.set}</span></span>` : ''}${cd ? `<span class="sunin">${ic('sun')}<span>${esc(cd)}</span></span>` : ''}</div>
       ${xtra ? `<div class="xtra">${xtra}</div>` : ''}
       ${n ? `<button class="more" type="button" data-stories="${d.sun}">${ic('pin')}${esc(L.storiesHere(n))}</button>` : ''}</div>`;
@@ -2159,7 +2205,8 @@ async function addTickets(edit) {
   const rows = await MWTickets.open({ rows: have, files, focus: edit, name: me && me.name, year: +T.days[0].date.slice(0, 4) });
   if (!rows) return;
   const by = meId(); store.set(FLKEY, JSON.stringify(rows.map(r => ({ ...r, by, v: 2 }))));
-  renderInfo(); toast(rows.length ? L.i.ticketSaved : L.i.ticketGone, 'plane');
+  T = buildTrip(); if (current >= 0 && !T.days.some(d => d.n === current)) current = -1;
+  renderAll(); toast(rows.length ? L.i.ticketSaved : L.i.ticketGone, 'plane');
 }
 function renderInfo() {
   cleanTickets();
@@ -2188,6 +2235,7 @@ function renderInfo() {
         ${schedHTML(c.text)}
         <div class="rows">
           ${row(S.date, esc(dateLabel(d.date)))}
+          ${d.mine ? row(L.i.myFl, d.mine.map(r => `<bdi dir="ltr">${esc(flightText(r))}</bdi>`).join('<br>')) : ''}
           ${row(S.stay, c.stay ? esc(c.stay) : '')}
           ${row(S.sun, sun ? `${sun.rise} / ${sun.set}` : '')}
           ${row(S.look, look.length ? esc(look.map(a => a[lang].name).join(', ')) : '')}

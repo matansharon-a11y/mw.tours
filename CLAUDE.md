@@ -40,6 +40,9 @@ commit finished work straight to `main`; there is no build step.
   `mw-tour-<slug>-flights` (synced like the lists, so the admin's view-as shows them). The Flights block is empty until
   then for everyone (also travelers with a `personal` entry; that only shapes their map days now).
   Each added flight has a small pencil that opens the sheet on that row to edit it.
+  Flights also shape the map days (`withTickets`, rebuilt from `RAW` on save): a flight on a trip day shows on that day's
+  card; flights after the last day add a day each (date, "Flight" tag, frame on the departure airport's place by `code`);
+  flights before the first day go on day 0 (added as "Departure" when the trip has none).
   Saved flights carry `by` (the member id) and `v: 2` (all earlier saves were cleared on 11.10.2026); only that traveler sees them. `members.js` keeps one owner per browser
   (`mw-tour-<slug>-owner`): when a different traveler signs in there, the lists/field/flights on it are cleared first.
   A ticket with several travelers (a couple on one booking): the signed-in name is matched to a name on it (Mr/Ms …,
