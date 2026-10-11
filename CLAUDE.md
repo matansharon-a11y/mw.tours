@@ -19,8 +19,8 @@ commit finished work straight to `main`; there is no build step.
   shared photos. Tapping a traveler's name opens `<tour>/?as=<member or list id>` (also before they joined): that traveler's view,
   read only (`assets/viewas.js` keeps their lists in that tab so the admin's own are untouched).
 - `assets/`: favicon set (same as the MWP site), logo, contour image, `fonts.css` + `fonts/` (Heebo for Hebrew).
-- Type, on every page: English in Google Sans (Google Fonts), Hebrew in Heebo. Font stacks start with
-  "MW Hebrew" (Heebo, Hebrew letters only), then "Google Sans". No other fonts.
+- Type, on every page: English in Google Sans, Hebrew in Heebo, both kept in `assets/fonts/` (no Google Fonts).
+  Font stacks start "MW Hebrew" (Heebo, Hebrew letters only), "MW Sans" (Google Sans). No other fonts.
 - Supabase project `uiydebfzuxnxjqcnrylv`. Setup and updates are plain `.txt` files (not `.sql`).
 
 ## Every expedition gets the same features (fill them in the vault when making a new one)
