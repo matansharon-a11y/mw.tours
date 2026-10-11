@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><link rel="icon" href="../assets/favicon.ico" sizes="32x32"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png"><script src="../assets/viewas.js?v=202610112230"></script><script src="../assets/members.js?v=202610112230" defer></script><script src="../assets/tickets.js?v=202610112230" defer></script><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><link rel="icon" href="../assets/favicon.ico" sizes="32x32"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png"><script src="../assets/viewas.js?v=202610112232"></script><script src="../assets/members.js?v=202610112232" defer></script><script src="../assets/tickets.js?v=202610112232" defer></script><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>השונר האיברי</title>
 <link rel="stylesheet" href="../assets/fonts.css?v=202610111325">
 <style>
@@ -2138,6 +2138,14 @@ const canTicket = () => !inViewer && !window.MW_AS;
 // someone else's flights)
 function meId() { try { const m = JSON.parse(store.get(KEY + '-member') || 'null'); return m && m.id ? String(m.id) : 'local'; } catch (e) { return 'local'; } }
 function myTickets() { try { const a = JSON.parse(store.get(FLKEY) || 'null'), me = meId(); const own = Array.isArray(a) ? a.filter(r => r && r.by === me) : []; return own.length ? own : null; } catch (e) { return null; } }
+// someone else's flights left in this browser's copy (or an untagged copy from before) are removed from it, and the
+// cleaned copy is what syncs back to this traveler's account
+function cleanTickets() {
+  if (window.MW_AS || inViewer) return;
+  try { const raw = store.get(FLKEY); if (!raw) return; const a = JSON.parse(raw), me = meId();
+    if (!Array.isArray(a)) { store.set(FLKEY, '[]'); return; }
+    const own = a.filter(r => r && r.by === me); if (own.length !== a.length) store.set(FLKEY, JSON.stringify(own)); } catch (e) {}
+}
 function flightRows() {
   const mine = myTickets();
   if (mine) return mine.map((r, n) => ({ own: n, date: r.iso ? `${r.iso.slice(8, 10)}.${r.iso.slice(5, 7)}` : '', time: r.time || '', from: r.from || '', to: r.to || '', flight: r.flight || '', arrive: r.arrive || '' }));
@@ -2154,6 +2162,7 @@ async function addTickets(edit) {
   renderInfo(); toast(rows.length ? L.i.ticketSaved : L.i.ticketGone, 'plane');
 }
 function renderInfo() {
+  cleanTickets();
   const I = L.i, fl = T.flights;
   const val = v => esc(tx(v));
   const allChecks = T.essentials.flatMap(s => s.check || []), firstList = T.essentials.find(s => s.check);
