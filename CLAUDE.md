@@ -38,9 +38,9 @@ commit finished work straight to `main`; there is no build step.
 - Flight tickets: "Add your flight ticket" beside "Add to calendar" (`assets/tickets.js`, read in the browser: pdf.js for
   PDFs, Tesseract OCR for JPG/PNG; nothing is uploaded). The traveler checks the rows, they are kept in
   `mw-tour-<slug>-flights` (synced like the lists, so the admin's view-as shows them). The Flights block is empty until
-  then, except for a traveler with a `personal` entry, who sees the vault's flights until they add their own.
+  then for everyone (also travelers with a `personal` entry; that only shapes their map days now).
   Each added flight has a small pencil that opens the sheet on that row to edit it.
-  Saved flights carry `by` (the member id) and only that traveler sees them. `members.js` keeps one owner per browser
+  Saved flights carry `by` (the member id) and `v: 2` (all earlier saves were cleared on 11.10.2026); only that traveler sees them. `members.js` keeps one owner per browser
   (`mw-tour-<slug>-owner`): when a different traveler signs in there, the lists/field/flights on it are cleared first.
   A ticket with several travelers (a couple on one booking): the signed-in name is matched to a name on it (Mr/Ms …,
   SURNAME/GIVEN MR; Sara/Sarah, Haim/Chaim count); when each traveler's part holds different flights, only theirs are
