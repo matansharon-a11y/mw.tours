@@ -1,0 +1,11 @@
+/* MW Photo Tours type: English in Google Sans (from Google Fonts), Hebrew in Heebo (here).
+   "MW Hebrew" covers only the Hebrew letters, so it goes first in every font stack:
+   Hebrew text takes Heebo, Latin letters and digits fall through to Google Sans. */
+@font-face {
+  font-family: "MW Hebrew";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(fonts/heebo-hebrew.woff2) format("woff2-variations"), url(fonts/heebo-hebrew.woff2) format("woff2");
+  unicode-range: U+0307-0308, U+0590-05FF, U+20AA, U+25CC, U+FB1D-FB4F;
+}
