@@ -159,6 +159,7 @@ const CSS = `
 .mwt input:focus{outline:none;border-color:#F4AF56}
 .mwt input.code{text-transform:uppercase;letter-spacing:.06em}
 .mwt .rm{width:34px;height:38px;border-radius:10px;border:1px solid rgba(240,138,122,.4);background:none;color:#F7B2A6;font-size:18px;cursor:pointer}
+.mwt .row.on{border-color:rgba(244,175,86,.6)}
 .mwt .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .mwt .acts .sp{flex:1}
 .mwt button.b{min-height:42px;padding-inline:16px;border-radius:64px;border:1px solid rgba(244,244,244,.35);background:none;color:#F4F4F4;font:700 14px/1 inherit;font-family:inherit;cursor:pointer}
@@ -230,6 +231,8 @@ function open(opts = {}) {
     f.onsubmit = e => { e.preventDefault(); read(); close(rows.filter(r => r.iso && r.from && r.to).sort((a, b) => (a.iso + a.time).localeCompare(b.iso + b.time))); };
     draw(); document.body.appendChild(v);
     if (opts.files && opts.files.length) addTickets(opts.files);
+    // opened from a flight's pencil: go straight to that row
+    if (opts.focus != null && list.children[opts.focus]) { const el = list.children[opts.focus]; el.classList.add('on'); el.scrollIntoView({ block: 'center' }); setTimeout(() => el.querySelector('input')?.focus({ preventScroll: true }), 60); }
   });
 }
 
