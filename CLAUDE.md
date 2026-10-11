@@ -30,6 +30,10 @@ commit finished work straight to `main`; there is no build step.
   optional `phone` image + `phoneFocus` when the subject would sit under the title on a phone.
 - Leader: optional `leader.story` {he, en: {kicker, by, text[]}}, shown in the text column beside the photo.
 - No photo beside the Flights block.
+- Flight tickets: "Add your flight ticket" beside "Add to calendar" (`assets/tickets.js`, read in the browser: pdf.js for
+  PDFs, Tesseract OCR for JPG/PNG; nothing is uploaded). The traveler checks the rows, they are kept in
+  `mw-tour-<slug>-flights` (synced like the lists, so the admin's view-as shows them). The Flights block is empty until
+  then, except for a traveler with a `personal` entry, who sees the vault's flights until they add their own.
 
 ## Rules
 - Every expedition, now and future, has the same interface as Manas & Kaziranga (the reference): a UI change to

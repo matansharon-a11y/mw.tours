@@ -22,7 +22,7 @@ const vaultEl = document.getElementById('vault');
 let SLUG = null; try { SLUG = JSON.parse(vaultEl.textContent).slug; } catch (e) {}
 if (!SLUG) return;
 const AS = window.MW_AS || null;   // Matan looking at a traveler's view (read only), see viewas.js
-const KEY = 'mw-tour-' + SLUG, PARTS = ['check', 'field', 'seen'], ME = KEY + '-member', NAME = 'mw-tour-name';
+const KEY = 'mw-tour-' + SLUG, PARTS = ['check', 'field', 'seen', 'flights'], ME = KEY + '-member', NAME = 'mw-tour-name';
 
 // ---------- storage helpers (raw, so our own writes don't trigger a save) ----------
 const raw = { get: Storage.prototype.getItem, set: Storage.prototype.setItem };

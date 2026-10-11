@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><link rel="icon" href="../assets/favicon.ico" sizes="32x32"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png"><script src="../assets/viewas.js?v=202610111325"></script><script src="../assets/members.js?v=202610111325" defer></script><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><link rel="icon" href="../assets/favicon.ico" sizes="32x32"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png"><script src="../assets/viewas.js?v=202610111752"></script><script src="../assets/members.js?v=202610111752" defer></script><script src="../assets/tickets.js?v=202610111752" defer></script><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>מאנאס וקזירנגה (Copy)</title>
 <link rel="stylesheet" href="../assets/fonts.css?v=202610111325">
 <style>
@@ -419,7 +419,8 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
 .feet .ic{width:18px;height:18px}
 .feet .ic.off{opacity:.3}
 .block{display:grid;gap:22px}
-.bh{display:flex;align-items:center;gap:14px}
+.bh{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px}
+.flights.empty p{margin:0;padding-block:18px;color:var(--faint);font-size:15px;line-height:1.6}
 .bh h3{margin:0;font-size:24px;font-weight:700}
 .bh .n{margin-inline-start:auto;font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
 .flights{display:grid;border-top:1px solid var(--rule)}
@@ -874,7 +875,9 @@ const UI = {
       morning: 'בבוקר', day: 'במהלך היום', yes: 'כלול', no: 'לא כלול', of: (a, b) => `${a}/${b}`, map: 'נתוני המפה',
       days: 'יום אחר יום', cal: 'הוספה ליומן', lists: 'רשימות הציוד', here: 'עכשיו בישראל', there: 'עכשיו באסאם', ahead: h => `מקדים את ישראל ב-${h} שעות`,
       install: { title: 'שמרו את המסע בטלפון', text: ['באייפון: כפתור השיתוף, ואז "הוספה למסך הבית".', 'באנדרואיד: התפריט, ואז "התקנת אפליקציה".', 'אחרי הפתיחה הראשונה העמוד עובד גם בלי קליטה.'] },
-      calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג' },
+      calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג',
+      ticket: 'הוספת כרטיס טיסה', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
+      noFlights: 'הטיסות שלכם יופיעו כאן אחרי שתוסיפו את כרטיסי הטיסה (PDF, ‏JPG או PNG). הכרטיס נקרא בטלפון שלכם ולא נשלח לשום מקום.' },
     l: { kicker: 'המדריך שלכם', contact: 'דברו איתי', wa: 'וואטסאפ למתן', waText: 'היי מתן, לגבי המסע לאסאם', phone: 'טלפון', mail: 'מייל', copy: 'העתקה', copied: 'הועתק', ig: 'אינסטגרם' },
     sched: { date: 'תאריך', stay: 'לינה', sun: 'זריחה / שקיעה', look: 'מה לחפש', ex: 'תרגיל צילום', map: 'להראות במפה' },
     lookFor: 'לחפש היום', exercise: 'תרגיל היום', packed: (a, b) => `הרשימות שלי: ${a}/${b}`, readOf: (a, b) => `${a} מתוך ${b} סיפורים נקראו`,
@@ -907,7 +910,9 @@ const UI = {
       morning: 'Mornings', day: 'Daytime', yes: 'Included', no: 'Not included', of: (a, b) => `${a}/${b}`, map: 'Map data',
       days: 'Day by day', cal: 'Add to calendar', lists: 'Packing lists', here: 'Now in Israel', there: 'Now in Assam', ahead: h => `${h} hours ahead of Israel`,
       install: { title: 'Keep it on your phone', text: ['iPhone: the Share button, then "Add to Home Screen".', 'Android: the menu, then "Install app".', 'After the first visit the page works without signal too.'] },
-      calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion' },
+      calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion',
+      ticket: 'Add your flight ticket', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
+      noFlights: 'Your flights will show here once you add your flight tickets (PDF, JPG or PNG). The ticket is read on your phone and is not sent anywhere.' },
     l: { kicker: 'Your leader', contact: 'Get in touch', wa: 'WhatsApp Matan', waText: 'Hi Matan, about the Assam expedition', phone: 'Phone', mail: 'Email', copy: 'Copy', copied: 'Copied', ig: 'Instagram' },
     sched: { date: 'Date', stay: 'Overnight', sun: 'Sunrise / sunset', look: 'Look for', ex: 'Photo exercise', map: 'Show on map' },
     lookFor: 'Look for today', exercise: "Today's exercise", packed: (a, b) => `My lists: ${a}/${b}`, readOf: (a, b) => `${a} of ${b} stories read`,
@@ -2108,6 +2113,25 @@ function schedHTML(text) {
   if (!st.some(s => s.t)) return `<p class="full">${esc(text)}</p>`;
   return `<ol class="sched">${st.map(s => `<li><span class="tm">${s.t ? esc(s.t) : '<i></i>'}</span><span>${esc(s.x.replace(/[.]$/, ''))}</span></li>`).join('')}</ol>`;
 }
+// the traveler's own flights, read from the tickets they add (assets/tickets.js). Until they add one the Flights block is
+// empty, except for a traveler whose flights the vault already holds by name (personal entries).
+const FLKEY = KEY + '-flights';
+const canTicket = () => !inViewer && !window.MW_AS;
+function myTickets() { try { const a = JSON.parse(store.get(FLKEY) || 'null'); return Array.isArray(a) && a.length ? a : null; } catch (e) { return null; } }
+function flightRows() {
+  const mine = myTickets();
+  if (mine) return mine.map(r => ({ date: r.iso ? `${r.iso.slice(8, 10)}.${r.iso.slice(5, 7)}` : '', time: r.time || '', from: r.from || '', to: r.to || '', flight: r.flight || '', arrive: r.arrive || '' }));
+  return document.documentElement.dataset.personal === 'yes' ? T.flights.rows : [];
+}
+async function addTickets() {
+  if (!window.MWTickets) return;
+  const have = myTickets() || [];
+  const files = await MWTickets.pickFiles(); if (!files.length) return;
+  const rows = await MWTickets.open({ rows: have, files, year: +T.days[0].date.slice(0, 4) });
+  if (!rows) return;
+  store.set(FLKEY, JSON.stringify(rows));
+  renderInfo(); toast(rows.length ? L.i.ticketSaved : L.i.ticketGone, 'plane');
+}
 function renderInfo() {
   const I = L.i, fl = T.flights;
   const val = v => esc(tx(v));
@@ -2116,7 +2140,8 @@ function renderInfo() {
       <button class="pill" type="button" data-jump="blk-days">${ic('calendar')}<span>${esc(I.days)}</span></button>
       <button class="pill" type="button" data-jump="blk-flights">${ic('plane')}<span>${esc(I.flights)}</span></button>
       ${firstList ? `<button class="pill" type="button" data-jump="ess-${firstList.id}">${ic('check')}<span>${esc(I.lists)} <small data-allcount>${allChecks.filter(it => checks[it.id]).length}/${allChecks.length}</small></span></button>` : ''}
-      ${inViewer ? '' : `<button class="pill" type="button" data-ics>${ic('download')}<span>${esc(I.cal)}</span></button>`}</div>`;
+      ${inViewer ? '' : `<button class="pill" type="button" data-ics>${ic('download')}<span>${esc(I.cal)}</span></button>`}
+      ${canTicket() ? `<button class="pill" type="button" data-ticket>${ic('plane')}<span>${esc(I.ticket)}</span></button>` : ''}</div>`;
   const today = todayDate();
   const days = T.days.map(d => {
     const { m, d: dd } = parseDay(d.date), c = d[lang], S = L.sched, F = T.field;
@@ -2142,7 +2167,7 @@ function renderInfo() {
       </div></div></div>`;
   }).join('');
   // a closing line instead of a flight (r.bye): the last word of the trip
-  const flights = fl.rows.map(r => r.bye ? `<div class="fl bye"><span class="d">${esc(r.date || '')}</span><span class="b">${ic('plane')}${esc(tx(r.bye))}</span></div>` : `<div class="fl${r.pending ? ' pending' : ''}">
+  const myRows = flightRows(), flights = myRows.map(r => r.bye ? `<div class="fl bye"><span class="d">${esc(r.date || '')}</span><span class="b">${ic('plane')}${esc(tx(r.bye))}</span></div>` : `<div class="fl${r.pending ? ' pending' : ''}">
       <span class="d">${esc(r.date)}</span><span class="t">${val(r.time)}</span>
       <span class="r">${esc(r.from)} ${ic('plane')} ${esc(r.to)}${r.arrive ? ` <small>${esc(r.arrive)}</small>` : ''}</span>
       <span class="no">${val(r.flight)}</span></div>`).join('');
@@ -2168,7 +2193,7 @@ function renderInfo() {
     <div class="clocks" id="blk-time" style="--i:0"><div class="clock"><span>${esc(I.here)}</span><b id="clk-il">--:--</b></div><div class="clock"><span>${esc(I.there)}</span><b id="clk-as">--:--</b><small id="clk-diff"></small></div></div>
     <div class="facts" style="--i:1">${factsHTML()}</div>
     <section class="block" id="blk-days" style="--i:2"><div class="bh"><span class="ring">${ic('calendar')}</span><h3>${esc(I.days)}</h3></div><div class="dlist">${days}</div></section>
-    <section class="block" id="blk-flights" style="--i:3"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${I.flights}</h3>${inViewer ? '' : `<button class="btn small" type="button" data-ics style="margin-inline-start:auto">${ic('download')}<span>${esc(I.cal)}</span></button>`}</div><div class="flights">${flights}</div><p class="note">${esc(fl[lang].note)}</p></section>
+    <section class="block" id="blk-flights" style="--i:3"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${I.flights}</h3>${inViewer ? '' : `<button class="btn small" type="button" data-ics style="margin-inline-start:auto">${ic('download')}<span>${esc(I.cal)}</span></button>`}${canTicket() ? `<button class="btn small" type="button" data-ticket>${ic('plane')}<span>${esc(I.ticket)}</span></button>` : ''}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(I.noFlights)}</p></div>`}</section>
     <section class="block" id="blk-stays" style="--i:4"><div class="bh"><span class="ring">${ic('bed')}</span><h3>${I.stays}</h3></div><div class="stays">${stays}</div></section>
     <section class="block" id="blk-weather" style="--i:5"><div class="bh"><span class="ring">${ic('sun')}</span><h3>${I.weather}</h3></div>
       <div class="wx">${weatherSVG(wx)}<p>${esc(wx[lang])}</p></div></section>
@@ -2200,10 +2225,11 @@ function downloadICS() {
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MW Photo Tours//Tour companion//EN', 'CALSCALE:GREGORIAN',
     'BEGIN:VEVENT', `UID:${T.slug}-trip@mw.photography`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${ymd(T.days[0].date)}`, `DTEND;VALUE=DATE:${ymd(endD)}`,
     `SUMMARY:${icsEsc(`MW Photo Tours · ${title}`)}`, 'END:VEVENT'];
-  T.flights.rows.filter(r => r.dep).forEach((r, i) => {
-    lines.push('BEGIN:VEVENT', `UID:${T.slug}-flight-${i}@mw.photography`, `DTSTAMP:${stamp}`, `DTSTART:${z(r.dep)}`);
-    if (r.arr) lines.push(`DTEND:${z(r.arr)}`);
-    lines.push(`SUMMARY:${icsEsc(`${tx(r.flight)} · ${r.from} → ${r.to}`)}`, `DESCRIPTION:${icsEsc(`${L.i.calTitle}: ${title}`)}`);
+  const lt = (d, t) => `${d.replace(/-/g, '')}T${t.replace(':', '')}00`;   // a ticket's own local time
+  (myTickets() ? myTickets().filter(r => r.iso && r.time).map(r => ({ ...r, local: true })) : flightRows().filter(r => r.dep)).forEach((r, i) => {
+    lines.push('BEGIN:VEVENT', `UID:${T.slug}-flight-${i}@mw.photography`, `DTSTAMP:${stamp}`, `DTSTART:${r.local ? lt(r.iso, r.time) : z(r.dep)}`);
+    if (r.arr && !r.local) lines.push(`DTEND:${z(r.arr)}`);
+    lines.push(`SUMMARY:${icsEsc(`${tx(r.flight)} · ${r.from} → ${r.to}${r.local && r.arrive ? ` · ${r.arrive}` : ''}`)}`, `DESCRIPTION:${icsEsc(`${L.i.calTitle}: ${title}`)}`);
     if (i === 0) lines.push('BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', `DESCRIPTION:${icsEsc(L.i.calDep)}`, 'END:VALARM');
     lines.push('END:VEVENT');
   });
@@ -2218,6 +2244,7 @@ function downloadICS() {
 }
 $('#info').addEventListener('click', e => {
   if (e.target.closest('[data-ics]')) { downloadICS(); return; }
+  if (e.target.closest('[data-ticket]')) { addTickets(); return; }
   const j = e.target.closest('[data-jump]'); if (j) { goto('info:' + j.dataset.jump); return; }
   const d = e.target.closest('[data-dayrow]'); if (d) { const w = d.closest('.dday'), on = !w.classList.contains('open'); w.classList.toggle('open', on); d.setAttribute('aria-expanded', on); return; }
   const dm = e.target.closest('[data-daymap]'); if (dm) { backDay = -1; backRoom = { tab: 'info', day: +dm.dataset.daymap }; setTab('route'); setPlaying(false); goDay(+dm.dataset.daymap); return; }
