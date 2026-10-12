@@ -13,6 +13,8 @@ commit finished work straight to `main`; there is no build step.
   expedition code (PBKDF2 + AES-GCM); never try to read or guess codes, and never write a code into a file.
 - `assets/members.js`: loaded by every tour. Traveler name on the code screen, Supabase sync of lists and
   progress, group photo uploads on the Field cards. When you change it, bump `?v=` in every tour page.
+  It also puts a name badge (`#mw-who`, initials + first name) in the top bar: tap it for the full name and
+  "Not you? Sign out" (back to the name + code screen; the next person starts clean).
 - `admin/`: Matan's admin (Supabase login): connect an expedition once with its code, see the code,
   add the traveler list (only a name on it can join: first, middle or last name, then the code; an empty
   list means no one can join; the first sign-in needs a connection, there is no code-only way in),
@@ -28,6 +30,7 @@ commit finished work straight to `main`; there is no build step.
 - Per-traveler flights: `personal` entries matched by name (Manas & Kaziranga is the example).
 - Header photos (`heroes.<room>`): HD (about 2560 px wide), `focus`, optional `tall` (people photos),
   optional `phone` image + `phoneFocus` when the subject would sit under the title on a phone.
+- Leader role line: "Expedition leader, founder of MW Photo Tours" (`leader.role`), on every expedition.
 - Leader: optional `leader.story` {he, en: {kicker, by, text[]}}, shown in the text column beside the photo.
 - No photo beside the Flights block.
 - Story kinds: wildlife, conservation, legend, culture, history, food, landscape, sky (the last two came with Iceland).

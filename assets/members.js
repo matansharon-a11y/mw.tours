@@ -39,12 +39,12 @@ let member = null; try { member = JSON.parse(ls.get(ME) || 'null'); } catch (e) 
 
 // ---------- words ----------
 const T = {
-  he: { name: 'שם', namePh: 'שם', needName: 'הקלידו את השם שלכם.', notListed: 'השם הזה לא ברשימת המטיילים של המסע. כתבו אותו כמו שמתן רשם אותו.', ambiguous: 'יש יותר ממטייל אחד בשם הזה. הוסיפו גם את שם המשפחה.', again: 'הקלידו שוב את השם ואת הקוד.', needSignal: 'בכניסה הראשונה צריך חיבור לאינטרנט. נסו שוב כשיש קליטה.', notOpen: 'המסע הזה עוד לא נפתח למטיילים.', newCode: 'קוד המסע השתנה. הקלידו את השם ואת הקוד החדש.', busy: 'פותחים…', wrong: 'הקוד לא תואם. בדקו אותו בהודעה ונסו שוב.',
+  he: { signedIn: 'מחוברים בשם', notYou: 'לא אתם? יציאה', whoIs: n => `מחוברים בשם ${n}`, name: 'שם', namePh: 'שם', needName: 'הקלידו את השם שלכם.', notListed: 'השם הזה לא ברשימת המטיילים של המסע. כתבו אותו כמו שמתן רשם אותו.', ambiguous: 'יש יותר ממטייל אחד בשם הזה. הוסיפו גם את שם המשפחה.', again: 'הקלידו שוב את השם ואת הקוד.', needSignal: 'בכניסה הראשונה צריך חיבור לאינטרנט. נסו שוב כשיש קליטה.', notOpen: 'המסע הזה עוד לא נפתח למטיילים.', newCode: 'קוד המסע השתנה. הקלידו את השם ואת הקוד החדש.', busy: 'פותחים…', wrong: 'הקוד לא תואם. בדקו אותו בהודעה ונסו שוב.',
         many: 'יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.', nameHint: 'באותו קוד ושם תוכלו להיכנס מכל טלפון או מחשב.',
         photos: 'תמונות הקבוצה', add: 'הוספת תמונה', adding: 'מעלים…', none: 'עדיין אין תמונות. אולי שלכם תהיה הראשונה?', you: 'אתם',
         del: 'מחיקה', delQ: 'למחוק את התמונה?', close: 'סגירה', prev: 'הקודמת', next: 'הבאה', failed: 'ההעלאה לא הצליחה. נסו שוב כשיש קליטה.',
         offline: 'אין חיבור כרגע. התמונות יופיעו כשתחזור הקליטה.', added: 'התמונה נוספה לקבוצה', yours: 'הצילום שלכם', others: 'צילומים של אחרים', othersN: n => n === 1 ? 'צילום 1' : `${n} צילומים`, replace: 'החלפה', replaced: 'הצילום שלכם הוחלף', codeChanged: 'קוד המסע השתנה. צאו והיכנסו שוב עם הקוד החדש.', asView: n => `צפייה בתור ${n} · קריאה בלבד`, asOwn: 'הטיסות האישיות', asGroup: 'טיסות הקבוצה: השם לא זוהה ברשימת הטיסות', asClose: 'סגירה', asLoading: 'טוענים את התצוגה של המטייל…', asSignIn: 'התחברו קודם לעמוד הניהול באותו דפדפן.', asMissing: 'המטייל הזה כבר לא במסע.', asFail: 'לא הצלחנו לטעון את התצוגה.', joinFirst: 'הוסיפו את השם שלכם כדי לראות ולשתף את תמונות הקבוצה.', whoTitle: 'מה השם שלכם?', whoText: 'כך הקבוצה תדע מי צילם. פעם אחת בלבד במכשיר הזה.', go: 'המשך', joined: 'מעולה! עכשיו לחצו על + כדי להוסיף תמונה.', notReady: 'שיתוף תמונות עוד לא הופעל במסע הזה.', tryLater: 'לא הצלחנו להתחבר. נסו שוב כשיש קליטה.', of: (a, b) => `${a} מתוך ${b}` },
-  en: { name: 'Name', namePh: 'Name', needName: 'Type your name.', notListed: "That name isn't on this expedition's traveler list. Type it the way Matan has it.", ambiguous: 'More than one traveler has that name. Add your last name too.', again: 'Please enter your name and the code again.', needSignal: 'The first sign-in needs a connection. Try again when you have signal.', notOpen: 'This expedition isn’t open to travelers yet.', newCode: 'The expedition code has changed. Enter your name and the new code.', busy: 'Opening…', wrong: "That code doesn't match. Check it in the message and try again.",
+  en: { signedIn: 'Signed in as', notYou: 'Not you? Sign out', whoIs: n => `Signed in as ${n}`, name: 'Name', namePh: 'Name', needName: 'Type your name.', notListed: "That name isn't on this expedition's traveler list. Type it the way Matan has it.", ambiguous: 'More than one traveler has that name. Add your last name too.', again: 'Please enter your name and the code again.', needSignal: 'The first sign-in needs a connection. Try again when you have signal.', notOpen: 'This expedition isn’t open to travelers yet.', newCode: 'The expedition code has changed. Enter your name and the new code.', busy: 'Opening…', wrong: "That code doesn't match. Check it in the message and try again.",
         many: 'Too many tries. Please wait a few minutes.', nameHint: 'With the same code and name you can open it on any phone or computer.',
         photos: 'Group photos', add: 'Add photo', adding: 'Uploading…', none: 'No photos yet. Yours could be the first.', you: 'You',
         del: 'Delete', delQ: 'Delete this photo?', close: 'Close', prev: 'Previous', next: 'Next', failed: "The upload didn't work. Try again when you have signal.",
@@ -176,7 +176,7 @@ function mountGate() {
       ls.set(KEY + '-code', norm(r.secret));
       await save();
       sessionStorage.removeItem('mw-reopen-' + SLUG);
-      if (!reopen()) { code.value = r.secret; local(); }
+      if (!reopen()) { code.value = r.secret; local(); whoBadge(); }
     } catch (ex) {
       // the name is checked on the server, so the first sign-in needs a connection
       btn.disabled = false; label.textContent = was;
@@ -201,13 +201,14 @@ async function resume() {
         adopt(j.member_id, member && member.id === j.member_id);
         member = { id: j.member_id, name: j.name }; ls.set(ME, JSON.stringify(member)); viewer = true;
         if (applyState(j.state) || !gateOpen()) { await save(); return reopen(); }   // reopen with their lists and their own flights
-        save(); decorate(true); loadPhotos(); return;
+        save(); whoBadge(); decorate(true); loadPhotos(); return;
       }
       const why = { name_not_listed: 'notListed', name_ambiguous: 'ambiguous', wrong_code: 'newCode', tour_not_ready: 'notOpen', too_many_attempts: 'many' };
       return relock(j ? why[j.error] || 'again' : 'again');
     }
     if (!r) {
       if (member) { member = null; ls.set(ME, 'null'); }
+      whoBadge();
       await viewWithCode();                     // expedition not connected yet: the page works on this device only
       decorate(true); if (viewer) loadPhotos(); return;
     }
@@ -218,7 +219,7 @@ async function resume() {
     const codeNow = norm(ls.get(KEY + '-code')), key = norm(r.secret);
     if (key && codeNow !== key) { ls.set(KEY + '-code', key); if (gateOpen() || changed) return reopen(); }
     if (changed) return reopen();
-    save();
+    save(); whoBadge();
     decorate(true); loadPhotos();
   } catch (e) {
     // a registered traveler carries on offline; a browser that was never registered goes back to the name + code screen
@@ -449,7 +450,7 @@ function askName() {
       names[member.id] = member.name;
       close();
       if (applyState(r.state)) { await save(); return reopen(); }   // their lists from another device: reload to show them
-      save(); loaded = false; await loadPhotos(); decorate(true); toast(w.joined);
+      save(); whoBadge(); loaded = false; await loadPhotos(); decorate(true); toast(w.joined);
     } catch (err) {
       go.disabled = false; go.textContent = w.go;
       // say what Supabase said, so a setup problem (e.g. anonymous sign-ins off) is easy to spot
@@ -482,6 +483,15 @@ document.addEventListener('click', e => {
 
 // ---------- look ----------
 const css = `
+#mw-who{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px 0 3px;border-radius:64px;border:1px solid rgba(254,251,241,.28);background:rgba(10,9,8,.35);color:#FEFBF1;font:600 12px/1 inherit;font-family:inherit;cursor:pointer;max-width:150px}
+#mw-who i{flex:none;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#F4AF56,#B9875F);color:#0A0908;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;letter-spacing:.02em}
+#mw-who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:560px){#mw-who{padding:0 2px;width:32px;justify-content:center}#mw-who span{display:none}}
+#mw-whopop{position:fixed;z-index:80;top:calc(58px + env(safe-area-inset-top));inset-inline-end:14px;display:grid;gap:4px;min-width:220px;max-width:calc(100vw - 28px);padding:16px 18px;border-radius:18px;background:rgba(16,14,12,.97);border:1px solid rgba(254,251,241,.16);box-shadow:0 18px 50px rgba(0,0,0,.5);color:#F4F4F4;font-family:inherit}
+#mw-whopop small{font-size:12px;color:rgba(244,244,244,.6)}
+#mw-whopop b{font-size:16px;color:#FEFBF1}
+#mw-whopop button{margin-top:10px;justify-self:start;min-height:38px;padding:0 16px;border-radius:64px;border:1px solid rgba(240,138,122,.5);background:none;color:#F7B2A6;font:600 13px/1 inherit;font-family:inherit;cursor:pointer}
+
 .gate-form .mw-name{width:100%;height:54px;border-radius:64px;border:1px solid rgba(254,251,241,.32);background:rgba(10,9,8,.45);text-align:center;font:600 17px/1 "MW Hebrew","MW Sans","Google Sans",Arial,sans-serif;letter-spacing:0;text-transform:none;color:#FEFBF1;transition:border-color .3s}
 .gate-form .mw-name::placeholder{color:rgba(254,251,241,.3);font-weight:400;letter-spacing:0;text-transform:none}
 .gate-form .mw-name:focus{outline:none;border-color:#F4AF56}
@@ -550,8 +560,31 @@ const css = `
 
 // ---------- start ----------
 function relabel() {
+  whoBadge();
   { const w = W(), l = $('#mw-name-l'), i = $('#mw-name'); if (l) l.textContent = w.name; if (i) i.placeholder = w.namePh; }
   decorate(true);
+}
+// ---------- who is signed in on this browser: a name badge in the top bar, with a way out ----------
+function whoBadge() {
+  const end = document.querySelector('.top .end'); if (!end || AS) return;
+  let b = $('#mw-who');
+  if (!member || !member.name) { if (b) b.remove(); return; }
+  if (!b) {
+    b = document.createElement('button'); b.id = 'mw-who'; b.type = 'button';
+    end.insertBefore(b, end.querySelector('[data-lang-toggle]') || end.firstChild);
+    b.addEventListener('click', e => { e.stopPropagation(); whoPop(); });
+  }
+  const parts = member.name.trim().split(/\s+/), w = W();
+  b.innerHTML = `<i>${esc(parts.map(x => x[0]).slice(0, 2).join('').toUpperCase())}</i><span>${esc(parts[0])}</span>`;
+  b.title = w.whoIs(member.name); b.setAttribute('aria-label', w.whoIs(member.name));
+}
+function whoPop() {
+  let p = $('#mw-whopop'); if (p) { p.remove(); return; }
+  const w = W(); p = document.createElement('div'); p.id = 'mw-whopop'; p.dir = document.documentElement.dir || 'rtl';
+  p.innerHTML = `<small>${esc(w.signedIn)}</small><b>${esc(member.name)}</b><button type="button">${esc(w.notYou)}</button>`;
+  p.querySelector('button').onclick = () => { sessionStorage.removeItem('mw-relocked-' + SLUG); relock(''); };   // the next person signs in fresh
+  document.body.appendChild(p);
+  setTimeout(() => document.addEventListener('click', function off(e) { if (!p.contains(e.target)) { p.remove(); document.removeEventListener('click', off); } }), 0);
 }
 // ---------- Matan: a traveler's view, read only ----------
 function asBar(text, ok) {
@@ -606,7 +639,7 @@ function boot() {
     decorate(false); setTimeout(() => decorate(false), 1500);
   }
   new MutationObserver(relabel).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
-  resume();
+  whoBadge(); resume();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
