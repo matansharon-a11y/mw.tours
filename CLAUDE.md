@@ -37,7 +37,8 @@ commit finished work straight to `main`; there is no build step.
 - Leader: optional `leader.story` {he, en: {kicker, by, text[]}}, shown in the text column beside the photo.
 - No photo beside the Flights block.
 - Last expedition day (`final`, set by `markLast` before the traveler's flights are added): a farewell line (`I.bye`, he/en)
-  under its text in the day-by-day and on the map day card. Same wording on every tour.
+  in place of its text in the day-by-day and on the map day card; that day shows no activities (no look-for, photo
+  exercise or schedule). Same wording on every tour.
 - Story kinds: wildlife, conservation, legend, culture, history, food, landscape, sky (the last two came with Iceland).
 - A tour without photos yet works: no `heroes` = plain room headers, stories/field cards show the contour placeholder,
   `tours.json` `cover: ""` shows an icon. Iceland (`iceland-2026`) has only its cover so far (photos/reynisdrangar.jpg).

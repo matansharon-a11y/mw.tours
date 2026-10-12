@@ -1997,10 +1997,10 @@ function renderCard(anim) {
     const d = T.days.find(x => x.n === current), c = d[lang];
     const sun = d.sun ? sunTimes(d.date, T.places[d.sun].lonlat, T.tz) : null;
     const n = d.sun ? T.stories.filter(s => s.where === d.sun).length : 0;
-    const isToday = sun && d.date === todayDate(), cd = isToday ? sunCountdown(sun) : '', xtra = dayExtras(d);
+    const isToday = sun && d.date === todayDate(), cd = isToday ? sunCountdown(sun) : '', xtra = d.final ? '' : dayExtras(d);
     html = `<div class="ctl"><button type="button" data-cardclose aria-label="${L.close}">${ic('x')}</button></div>
       <div class="c"><div class="hd"><span class="dl">${esc(c.label)}</span><span class="dd">${esc(dateLabel(d.date))}</span></div>
-      <h3>${esc(c.title)}</h3><p>${esc(c.text)}</p>${myFlightsHTML(d)}${byeHTML(d)}
+      <h3>${esc(c.title)}</h3>${d.final ? '' : `<p>${esc(c.text)}</p>`}${myFlightsHTML(d)}${byeHTML(d)}
       <div class="ft">${c.stay ? `<span>${ic('bed')}${esc(c.stay)}</span>` : ''}${sun ? `<span class="sun" title="${L.rise} / ${L.set}">${ic('rise')}${sun.rise}<span class="sr">${L.rise}</span> ${ic('set')}${sun.set}<span class="sr">${L.set}</span></span>` : ''}${cd ? `<span class="sunin">${ic('sun')}<span>${esc(cd)}</span></span>` : ''}</div>
       ${xtra ? `<div class="xtra">${xtra}</div>` : ''}
       ${n ? `<button class="more" type="button" data-stories="${d.sun}">${ic('pin')}${esc(L.storiesHere(n))}</button>` : ''}</div>`;
@@ -2280,14 +2280,15 @@ function renderInfo() {
     const sun = d.sun && T.places[d.sun] ? sunTimes(d.date, T.places[d.sun].lonlat, T.tz) : null;
     const look = F ? (d.look ? d.look.map(id => F.animals.find(a => a.id === id)).filter(Boolean)
       : GROUPS.includes(d.sun) ? F.animals.filter(a => a.where === d.sun || a.where === 'both') : []) : [];
-    const ex = F && d.exercise && F.exercises.find(x => x.id === d.exercise);
+    const ex = F && !d.final && d.exercise && F.exercises.find(x => x.id === d.exercise);
+    if (d.final) look.length = 0;
     const row = (k, v) => v ? `<div class="row"><b>${esc(k)}</b><span>${v}</span></div>` : '';
     const open = d.date === today;
     return `<div class="dday${open ? ' open' : ''}${d.date === today ? ' today' : ''}" style="--area:${AREA[d.sun] || 'transparent'}">
       <button class="drow" type="button" data-dayrow="${d.n}" aria-expanded="${open}">
-      <span class="n"><b>${d.home ? `${dd}.${m}` : pad2(d.n)}</b><small>${d.home ? esc(d[lang].tag || L.home) : `${dd}.${m}`}</small></span><span><span class="h">${esc(c.title)}</span><span class="p">${esc(c.text)}</span></span>${ic('next')}</button>
+      <span class="n"><b>${d.home ? `${dd}.${m}` : pad2(d.n)}</b><small>${d.home ? esc(d[lang].tag || L.home) : `${dd}.${m}`}</small></span><span><span class="h">${esc(c.title)}</span><span class="p">${esc(d.final ? L.i.bye : c.text)}</span></span>${ic('next')}</button>
       <div class="dpanel"><div class="dpin">
-        ${schedHTML(c.text)}${byeHTML(d)}
+        ${d.final ? byeHTML(d) : schedHTML(c.text)}
         <div class="rows">
           ${row(S.date, esc(dateLabel(d.date)))}
           ${d.mine ? row(L.i.myFl, d.mine.map(r => `<bdi dir="ltr">${esc(flightText(r))}</bdi>`).join('<br>')) : ''}
