@@ -50,8 +50,8 @@ commit finished work straight to `main`; there is no build step.
 - Story kinds: wildlife, conservation, legend, culture, history, food, landscape, sky (the last two came with Iceland).
 - A tour without photos yet works: no `heroes` = plain room headers, stories/field cards show the contour placeholder,
   `tours.json` `cover: ""` shows an icon. Iceland (`iceland-2026`) has its cover, heroes, most stories,
-  field cards and all exercises photographed (Kelvin's photos, 12.10.2026); still without photo: stories budir, food;
-  field arnarstapi, budir, diamond.
+  field cards and all exercises photographed (Kelvin's photos, 12.10.2026); still without photo: story food;
+  field arnarstapi, diamond.
 - Map layers (`map/*.webp` + the `geo` block): Iceland's are drawn, not satellite (Natural Earth land/glaciers, geoBoundaries
   coast, shaded relief), detail layers fade at their edges; `geo.credits` replaces the default credit line.
 - Flights block header: "Add flights" / "הוספת טיסות" with a round + and a round calendar icon ("Add to
