@@ -420,6 +420,7 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
 .feet .ic.off{opacity:.3}
 .block{display:grid;gap:22px}
 .bh{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px}
+#blk-flights .bh .rbtn+.rbtn{margin-inline-start:-6px}
 .rbtn{flex:none;display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:1px solid rgba(254,251,241,.32);background:none;color:var(--paper);cursor:pointer;transition:border-color .2s,color .2s}
 .rbtn:hover,.rbtn:focus-visible{border-color:var(--gold);color:var(--gold)}
 .rbtn .ic{width:19px;height:19px}
@@ -2314,7 +2315,7 @@ function renderInfo() {
     <div class="clocks" id="blk-time" style="--i:0"><div class="clock"><span>${esc(I.here)}</span><b id="clk-il">--:--</b></div><div class="clock"><span>${esc(I.there(T.region[lang]))}</span><b id="clk-as">--:--</b><small id="clk-diff"></small></div></div>
     <div class="facts" style="--i:1">${factsHTML()}</div>
     <section class="block" id="blk-days" style="--i:2"><div class="bh"><span class="ring">${ic('calendar')}</span><h3>${esc(I.days)}</h3></div><div class="dlist">${days}</div></section>
-    <section class="block" id="blk-flights" style="--i:3"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${canTicket() ? esc(I.ticket) : I.flights}</h3>${canTicket() ? `<button class="rbtn plusb" type="button" data-ticket aria-label="${esc(I.ticket)}" title="${esc(I.ticket)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : ''}${inViewer ? '' : `<button class="rbtn" type="button" data-ics aria-label="${esc(I.cal)}" title="${esc(I.cal)}" style="margin-inline-start:auto">${ic('calendar')}</button>`}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(window.MW_AS ? I.flPrivate : I.noFlights)}</p></div>`}</section>
+    <section class="block" id="blk-flights" style="--i:3"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${canTicket() ? esc(I.ticket) : I.flights}</h3>${canTicket() ? `<button class="rbtn plusb" type="button" data-ticket aria-label="${esc(I.ticket)}" title="${esc(I.ticket)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : ''}${inViewer ? '' : `<button class="rbtn" type="button" data-ics aria-label="${esc(I.cal)}" title="${esc(I.cal)}">${ic('calendar')}</button>`}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(window.MW_AS ? I.flPrivate : I.noFlights)}</p></div>`}</section>
     <section class="block" id="blk-stays" style="--i:4"><div class="bh"><span class="ring">${ic('bed')}</span><h3>${I.stays}</h3></div><div class="stays">${stays}</div></section>
     <section class="block" id="blk-weather" style="--i:5"><div class="bh"><span class="ring">${ic('sun')}</span><h3>${I.weather}</h3></div>
       <div class="wx">${weatherSVG(wx)}<p>${esc(wx[lang])}</p></div></section>
