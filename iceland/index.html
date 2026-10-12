@@ -438,14 +438,15 @@ body.tc3 .tabs button{padding-inline:12px}body.tc3 .tabs button span{display:non
 .bh h3{margin:0;font-size:24px;font-weight:700}
 .bh .n{margin-inline-start:auto;font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
 .flights{display:grid;border-top:1px solid var(--rule)}
-.fl{display:grid;grid-template-columns:64px 76px minmax(0,1fr) auto;align-items:center;gap:12px;padding-block:14px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
-.fl .d{color:var(--faint);font-size:14px}
-.fl .t{font-size:17px;font-weight:700;color:var(--paper)}
-.fl .r{display:flex;align-items:center;gap:10px;font:700 15px/1 var(--label);letter-spacing:.14em;color:var(--paper);direction:ltr;justify-content:flex-start}
+.fl{display:grid;grid-template-columns:62px 96px minmax(0,1fr) auto;align-items:center;gap:14px;padding-block:15px;border-bottom:1px solid var(--rule);font-family:var(--sans);font-variant-numeric:tabular-nums}
+.fl .d{display:grid;gap:4px}.fl .d b{font-size:15px;font-weight:600;color:var(--paper)}.fl .d small{font-size:12px;color:var(--faint)}
+.fl .t{display:grid;gap:4px}.fl .t b{font-size:17px;font-weight:700;color:var(--paper)}.fl .t small{font-size:12.5px;color:var(--faint)}.fl .t b.tbc{font-size:14px;font-weight:600;color:var(--gold-soft)}
+.fl .r{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;letter-spacing:.08em;color:var(--paper);direction:ltr;justify-content:flex-start}
 [dir=rtl] .fl .r{justify-content:flex-end}
 .fl .r .ic{width:16px;height:16px;color:var(--amber)}
-.fl .r small{font:500 12px/1 var(--sans);letter-spacing:0;color:var(--faint)}
+.fl .r small{font-size:12px;font-weight:500;letter-spacing:0;color:var(--faint)}
 .fl .no{font-size:13px;color:var(--gold-soft);text-align:end}
+.fno{display:inline-block;padding:5px 11px;border-radius:var(--pill);border:1px solid rgba(228,170,124,.38);font-size:12.5px;font-weight:600;letter-spacing:.03em;color:var(--gold-soft);white-space:nowrap}.fno.tbc{border-style:dashed;color:var(--faint);font-weight:500}
 .fl.pending{opacity:.6}
 .bye{display:flex;align-items:flex-start;gap:8px;margin:10px 0 0;font-size:14px;line-height:1.45;color:var(--paper)}.bye .ic{width:15px;height:15px;flex:none;margin-top:2px;color:var(--amber)}
 .myfl{display:flex;align-items:center;gap:8px;margin:8px 0 0;font-size:14px;color:var(--gold-soft)}.myfl .ic{width:15px;height:15px;flex:none;color:var(--amber)}.myfl b{font-weight:600;color:var(--paper)}
@@ -720,7 +721,7 @@ body.tc3 .tabs button{padding-inline:12px}body.tc3 .tabs button span{display:non
   .bioband.has-story .ph{position:static}
   .bioband.has-story .lstory{margin-top:8px}.bioband .ph{max-width:420px}
   .lhead{gap:14px;padding:14px}.lhead .face{width:64px;height:64px}.lin{padding:4px 14px 18px}}
-@media (max-width:420px){.fl{grid-template-columns:52px 60px minmax(0,1fr)}.fl .no{grid-column:2 / -1;text-align:start}.fl .no:has(.fled){justify-content:flex-start}}
+@media (max-width:420px){.fl{grid-template-columns:50px 74px minmax(0,1fr);gap:12px}.fl .no{grid-column:2 / -1;text-align:start}.fl .no:has(.fled){justify-content:flex-start}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.jc{opacity:1}}
 </style>
 <!--/head-->
@@ -928,7 +929,7 @@ const UI = {
       morning: 'בבוקר', day: 'במהלך היום', yes: 'כלול', no: 'לא כלול', of: (a, b) => `${a}/${b}`, map: 'נתוני המפה',
       days: 'יום אחר יום', cal: 'הוספה ליומן', lists: 'רשימות הציוד', here: 'עכשיו בישראל', there: n => `עכשיו ב${n}`, ahead: h => `מקדים את ישראל ב-${h} שעות`, behind: h => h === '1' ? 'שעה אחת אחרי ישראל' : `${h} שעות אחרי ישראל`, same: 'אותה שעה כמו בישראל',
       install: { title: 'שמרו את המסע בטלפון', text: ['באייפון: כפתור השיתוף, ואז "הוספה למסך הבית".', 'באנדרואיד: התפריט, ואז "התקנת אפליקציה".', 'אחרי הפתיחה הראשונה העמוד עובד גם בלי קליטה.'] },
-      calTitle: 'מסע צילום', calDep: 'מחר טסים', myFl: 'הטיסה שלך', bye: 'היום האחרון של הטיול. תודה שהייתם חלק מהמסע הזה. תיהנו מכל רגע אחרון, ודרך צלחה הביתה!',
+      calTitle: 'מסע צילום', calDep: 'מחר טסים', myFl: 'הטיסה שלך', tbc: 'שעה תעודכן', flTbc: 'מספר טיסה יעודכן', bye: 'היום האחרון של הטיול. תודה שהייתם חלק מהמסע הזה. תיהנו מכל רגע אחרון, ודרך צלחה הביתה!',
       ticket: 'הוספת טיסות', ticketEdit: 'עריכת הטיסה', flPrivate: 'הטיסות של כל נוסע פרטיות: רק מי שהוסיף את הכרטיס רואה אותן.', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
       noFlights: 'הוסיפו את הטיסות שלכם, מהבית אל המסע ובחזרה, והמסלול שלכם יופיע גם על המפה. רק אתם רואים אותן.' },
     l: { kicker: 'המדריך שלכם', contact: 'דברו איתי', wa: 'וואטסאפ למתן', waText: 'היי מתן, לגבי המסע', phone: 'טלפון', mail: 'מייל', copy: 'העתקה', copied: 'הועתק', ig: 'אינסטגרם', fb: 'פייסבוק', web: 'אתר', waTo: 'וואטסאפ ל', contactOf: 'ליצירת קשר עם ', kickers: 'המדריכים שלכם' },
@@ -963,7 +964,7 @@ const UI = {
       morning: 'Mornings', day: 'Daytime', yes: 'Included', no: 'Not included', of: (a, b) => `${a}/${b}`, map: 'Map data',
       days: 'Day by day', cal: 'Add to calendar', lists: 'Packing lists', here: 'Now in Israel', there: n => `Now in ${n}`, ahead: h => `${h} hours ahead of Israel`, behind: h => h === '1' ? 'One hour behind Israel' : `${h} hours behind Israel`, same: 'Same time as Israel',
       install: { title: 'Keep it on your phone', text: ['iPhone: the Share button, then "Add to Home Screen".', 'Android: the menu, then "Install app".', 'After the first visit the page works without signal too.'] },
-      calTitle: 'Photo expedition', calDep: 'Flying tomorrow', myFl: 'Your flight', bye: 'Last day of the trip. Thank you for being part of this expedition. Enjoy every last moment, and safe travels home!',
+      calTitle: 'Photo expedition', calDep: 'Flying tomorrow', myFl: 'Your flight', tbc: 'Time TBC', flTbc: 'Flight no. TBC', bye: 'Last day of the trip. Thank you for being part of this expedition. Enjoy every last moment, and safe travels home!',
       ticket: 'Add flights', ticketEdit: 'Edit this flight', flPrivate: 'Each traveler\'s flights are private: only the one who added the ticket sees them.', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
       noFlights: 'Add your flights, from home to the expedition and back, and your own route shows on the map too. Only you see them.' },
     l: { kicker: 'Your leader', contact: 'Get in touch', wa: 'WhatsApp Matan', waText: 'Hi Matan, about the expedition', phone: 'Phone', mail: 'Email', copy: 'Copy', copied: 'Copied', ig: 'Instagram', fb: 'Facebook', web: 'Website', waTo: 'WhatsApp ', contactOf: 'Contact ', kickers: 'Your leaders' },
@@ -2342,9 +2343,10 @@ function renderInfo() {
   }).join('');
   // a closing line instead of a flight (r.bye): the last word of the trip
   const myRows = flightRows(), flights = myRows.map(r => r.bye ? `<div class="fl bye"><span class="d">${esc(r.date || '')}</span><span class="b">${ic('plane')}${esc(tx(r.bye))}</span></div>` : `<div class="fl${r.pending ? ' pending' : ''}">
-      <span class="d">${esc(r.date)}</span><span class="t">${val(r.time)}</span>
-      <span class="r">${esc(r.from)}${r.to ? ` ${ic('plane')} ${esc(r.to)}` : ''}${r.arrive ? ` <small>${esc(r.arrive)}</small>` : ''}</span>
-      <span class="no">${val(r.flight)}${r.own != null && canTicket() ? `<button class="fled" type="button" data-fledit="${r.own}" aria-label="${esc(I.ticketEdit)}" title="${esc(I.ticketEdit)}">${ic('pen')}</button>` : ''}</span></div>`).join('');
+      <span class="d"><b>${esc(r.date)}</b>${r.iso ? `<small>${esc(new Date(r.iso + 'T12:00:00Z').toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-GB', { weekday: 'short', timeZone: 'UTC' }))}</small>` : ''}</span>
+      <span class="t">${/^\d\d:\d\d$/.test(tx(r.time) || '') ? `<b>${esc(tx(r.time))}</b>${r.arrive ? `<small>${lang === 'he' ? '←' : '→'} ${esc(tx(r.arrive))}</small>` : ''}` : `<b class="tbc">${esc(tx(r.time) || I.tbc)}</b>`}</span>
+      <span class="r"><span>${esc(r.from)}</span>${ic('plane')}<span>${esc(r.to)}</span></span>
+      <span class="no">${tx(r.flight) ? `<span class="fno">${val(r.flight)}</span>` : `<span class="fno tbc">${esc(I.flTbc)}</span>`}${r.own != null && canTicket() ? `<button class="fled" type="button" data-fledit="${r.own}" aria-label="${esc(I.ticketEdit)}" title="${esc(I.ticketEdit)}">${ic('pen')}</button>` : ''}</span></div>`).join('');
   const stays = T.stays.map(s => `<div class="stay"><span class="nt">${val(s.nights)}</span><b>${esc(s.name)}</b><span>${val(s.place)}</span><p>${val(s.text)}</p></div>`).join('');
   const wx = T.weather;
   const ess = T.essentials.map(s => {

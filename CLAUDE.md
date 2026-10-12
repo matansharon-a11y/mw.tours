@@ -68,6 +68,8 @@ commit finished work straight to `main`; there is no build step.
   admin's view-as does not show them. The Flights block (`flightRows()`) always lists the tour's own flights inside its
   area (vault `flights.rows` with both `from` and `to`, e.g. Manas DEL→GAU / GAU→DEL, personal patches applied) plus the
   traveler's own, merged and sorted by date (a typed copy of a tour flight shows once); "Add to calendar" exports them all.
+  Each row: date + weekday, departure time with → arrival under it, route codes, flight no. as a pill (all in the one
+  sans font); a missing time/flight no. shows "Time TBC" / "Flight no. TBC" (Manas GAU→DEL for travelers with no personal entry).
   Each flight has a small pencil that opens the sheet on that row.
   Flights shape the map (`withTickets`, rebuilt from `RAW` + `buildMap()` on save): each flight becomes a flight line
   between its airports (new airport places `u-<code>`), and the group's own flight lines are dropped on the days of the
