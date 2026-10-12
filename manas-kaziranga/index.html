@@ -1127,7 +1127,7 @@ const ppdNow = () => view.s * DEG;
 const visibleStories = () => T.stories.filter(s => filter === 'all' || s.kind === filter);
 
 function buildMap() {
-  const imgs = GEO.images.map(im => `<image href="${im.src}" x="${im.x}" y="${im.y}" width="${im.w}" height="${im.h}" preserveAspectRatio="none"/>`).join('');
+  const imgs = GEO.images.map((im, i) => `<image data-im="${i}" href="${im.src}" x="${im.x}" y="${im.y}" width="${im.w}" height="${im.h}" preserveAspectRatio="none"/>`).join('');
   const areas = T.areas.map(a => {
     const [x, y] = P(a.lonlat), rx = a.rx * DEG, ry = (my(a.lonlat[1] - a.ry) - my(a.lonlat[1] + a.ry)) / 2;
     return `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${a.rot} ${x} ${y})" fill="url(#glow)"/>`;
@@ -1276,6 +1276,15 @@ function render() {
     $('#clouds').style.opacity = (clamp((ppd - 40) / 80, 0, 1) * clamp((900 - ppd) / 400, 0, 1)).toFixed(3);
     $('#birds').style.opacity = (journeyOn ? 0 : clamp((ppd - 150) / 150, 0, 1)).toFixed(3);
   }
+  // draw only the map pictures that are on screen; the whole-world base only where the tour's own world map ends
+  // (fewer and smaller pictures to redraw on every frame: no flicker while the map moves)
+  const vx = view.x - w / 2, vy = view.y - h / 2, inside = im => vx >= im.x && vy >= im.y && vx + w <= im.x + im.w && vy + h <= im.y + im.h;
+  const world = GEO.images.find(im => !/world-base/.test(im.src));
+  $$('image[data-im]', svg).forEach(el => {
+    const im = GEO.images[+el.dataset.im];
+    const on = im.x < vx + w && im.x + im.w > vx && im.y < vy + h && im.y + im.h > vy && !(/world-base/.test(im.src) && world && inside(world));
+    if (el._on !== on) { el._on = on; el.style.display = on ? '' : 'none'; }
+  });
   placeOverlay();
 }
 
@@ -2235,8 +2244,7 @@ function renderInfo() {
       <button class="pill" type="button" data-jump="blk-days">${ic('calendar')}<span>${esc(I.days)}</span></button>
       <button class="pill" type="button" data-jump="blk-flights">${ic('plane')}<span>${esc(I.flights)}</span></button>
       ${firstList ? `<button class="pill" type="button" data-jump="ess-${firstList.id}">${ic('check')}<span>${esc(I.lists)} <small data-allcount>${allChecks.filter(it => checks[it.id]).length}/${allChecks.length}</small></span></button>` : ''}
-      ${inViewer ? '' : `<button class="pill" type="button" data-ics>${ic('download')}<span>${esc(I.cal)}</span></button>`}
-      ${canTicket() ? `<button class="pill" type="button" data-ticket>${ic('plane')}<span>${esc(I.ticket)}</span></button>` : ''}</div>`;
+      ${inViewer ? '' : `<button class="pill" type="button" data-ics>${ic('download')}<span>${esc(I.cal)}</span></button>`}</div>`;
   const today = todayDate();
   const days = T.days.map(d => {
     const { m, d: dd } = parseDay(d.date), c = d[lang], S = L.sched, F = T.field;

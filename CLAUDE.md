@@ -39,7 +39,11 @@ commit finished work straight to `main`; there is no build step.
   `tours.json` `cover: ""` shows an icon. Iceland (`iceland-2026`) is like that until Matan sends photos.
 - Map layers (`map/*.webp` + the `geo` block): Iceland's are drawn, not satellite (Natural Earth land/glaciers, geoBoundaries
   coast, shaded relief), detail layers fade at their edges; `geo.credits` replaces the default credit line.
-- Flights, typed by each traveler: "Add your flights" beside "Add to calendar" (`assets/flights.js`: From/To picked from
+- Flights block title is "Flights" / "טיסות" everywhere (no per-tour title override). The top of Essentials has one "Flights"
+  pill (jumps to the block); adding happens only in the block.
+- Map pictures: only those on screen are drawn, and `world-base` only where the tour's own world map ends (`render()`).
+  Keep each map picture at about 2000 px or less (big ones get dropped and redrawn on phones: flicker).
+- Flights, typed by each traveler: "Add your flights" in the Flights block beside "Add to calendar" (`assets/flights.js`: From/To picked from
   `assets/airports.js`, 3,244 airports with scheduled service from OurAirports, loaded when the sheet opens; date, times,
   flight no. optional; times: one field each that opens hour (00–23) / minute scroll wheels; 24-hour everywhere,
   e.g. 13:05). No file reading any more (ticket upload was removed 12.10.2026). Rows are kept in
