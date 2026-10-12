@@ -515,6 +515,25 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
 .lstory .by{margin:0;font-size:14px;color:#3B5168}
 .lstory p.t{margin:0;font-size:17px;line-height:1.75;color:#22384F}
 .contact{display:grid;gap:16px;max-width:780px}
+/* two or more leaders (vault `leaders`): one expandable card each */
+.lcards{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;width:100%;max-width:780px}
+.lcard{border-radius:22px;background:rgba(255,255,255,.4);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.65);transition:border-color .3s,background-color .3s}
+.lcard.open{background:rgba(255,255,255,.55);border-color:rgba(159,131,94,.45)}
+.lhead{display:grid;grid-template-columns:auto minmax(0,1fr) 22px;gap:18px;align-items:center;width:100%;padding:16px 18px;background:none;border:0;color:inherit;font:inherit;text-align:start;cursor:pointer}
+.lhead .face{width:84px;height:84px;padding:3px}
+.lhead .nm{display:block;font-size:clamp(22px,4.4vw,30px);line-height:1.15;font-weight:600;color:var(--bark)}
+.lhead small{display:block;margin-top:5px;font-size:14.5px;line-height:1.4;color:#3B5168}
+.lhead>.ic{width:20px;height:20px;color:var(--earth);transition:transform .35s var(--ease)}
+[dir=rtl] .lhead>.ic{transform:scaleX(-1)}
+.lcard.open .lhead>.ic{transform:rotate(90deg)}
+.face .ini{display:grid;place-items:center;background:var(--navy);color:var(--paper);font-size:26px;font-weight:600;letter-spacing:.04em}
+.lpanel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s var(--ease)}
+.lcard.open .lpanel{grid-template-rows:1fr}
+.lpanel>div{overflow:hidden;min-height:0}
+.lin{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;padding:6px 20px 22px}
+.lin .roles{gap:14px}.lin .roles b{font-size:17px}
+.lin .clines{display:grid}
+.lgroup{margin:0;color:#3B5168;max-width:780px}
 .contact .acts{display:flex;flex-wrap:wrap;gap:10px}
 #leader .btn{color:#41352D;border-color:rgba(159,131,94,.55)}
 #leader .btn.wa{color:var(--night);border-color:var(--wa)}
@@ -702,7 +721,8 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
 @media (max-width:560px){.wx{grid-template-columns:1fr;gap:12px}.wx svg{max-width:300px}.lead{grid-template-columns:1fr;justify-items:start;gap:18px;padding:20px}.face{width:96px;height:96px;padding:4px}.fact{align-items:flex-start}.fact .ring{width:36px;height:36px}.fact span{font-size:15.5px}.bioband{grid-template-columns:1fr;gap:28px}
   .bioband.has-story{grid-template-areas:"bio" "ph" "story";row-gap:28px}
   .bioband.has-story .ph{position:static}
-  .bioband.has-story .lstory{margin-top:8px}.bioband .ph{max-width:420px}}
+  .bioband.has-story .lstory{margin-top:8px}.bioband .ph{max-width:420px}
+  .lhead{gap:14px;padding:14px}.lhead .face{width:64px;height:64px}.lin{padding:4px 14px 18px}}
 @media (max-width:420px){.fl{grid-template-columns:52px 60px minmax(0,1fr)}.fl .no{grid-column:2 / -1;text-align:start}.fl .no:has(.fled){justify-content:flex-start}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.jc{opacity:1}}
 </style>
@@ -744,6 +764,7 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 4.5h3.5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14M10 8l-4 4 4 4M6 12h9.5"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11m0-11-11 11"/></symbol>
+  <symbol id="i-fb" viewBox="0 0 24 24"><path d="M14.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4a21 21 0 0 0-2.4-.1c-2.4 0-4 1.4-4 4.1v2.1H8.6v3h2.7V21"/></symbol>
   <symbol id="i-next" viewBox="0 0 24 24"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></symbol>
   <symbol id="i-prev" viewBox="0 0 24 24"><path d="m14.5 5.5-6.5 6.5 6.5 6.5"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></symbol>
@@ -913,7 +934,7 @@ const UI = {
       calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג', myFl: 'הטיסה שלך', bye: 'היום האחרון של הטיול. תודה שהייתם חלק מהמסע הזה. תיהנו מכל רגע אחרון, ודרך צלחה הביתה!',
       ticket: 'הוספת טיסות', ticketEdit: 'עריכת הטיסה', flPrivate: 'הטיסות של כל נוסע פרטיות: רק מי שהוסיף את הכרטיס רואה אותן.', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
       noFlights: 'הוסיפו את הטיסות שלכם, מהבית אל המסע ובחזרה, והמסלול שלכם יופיע גם על המפה. רק אתם רואים אותן.' },
-    l: { kicker: 'המדריך שלכם', contact: 'דברו איתי', wa: 'וואטסאפ למתן', waText: 'היי מתן, לגבי המסע', phone: 'טלפון', mail: 'מייל', copy: 'העתקה', copied: 'הועתק', ig: 'אינסטגרם' },
+    l: { kicker: 'המדריך שלכם', contact: 'דברו איתי', wa: 'וואטסאפ למתן', waText: 'היי מתן, לגבי המסע', phone: 'טלפון', mail: 'מייל', copy: 'העתקה', copied: 'הועתק', ig: 'אינסטגרם', fb: 'פייסבוק', web: 'אתר', waTo: 'וואטסאפ ל', contactOf: 'ליצירת קשר עם ', kickers: 'המדריכים שלכם' },
     sched: { date: 'תאריך', stay: 'לינה', sun: 'זריחה / שקיעה', look: 'מה לחפש', ex: 'תרגיל צילום', map: 'להראות במפה' },
     lookFor: 'לחפש היום', exercise: 'תרגיל היום', packed: (a, b) => `הרשימות שלי: ${a}/${b}`, readOf: (a, b) => `${a} מתוך ${b} סיפורים נקראו`,
     readMore: 'להמשך', less: 'לקצר', read: 'נקרא', today: 'היום',
@@ -948,7 +969,7 @@ const UI = {
       calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion', myFl: 'Your flight', bye: 'Last day of the trip. Thank you for being part of this expedition. Enjoy every last moment, and safe travels home!',
       ticket: 'Add flights', ticketEdit: 'Edit this flight', flPrivate: 'Each traveler\'s flights are private: only the one who added the ticket sees them.', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
       noFlights: 'Add your flights, from home to the expedition and back, and your own route shows on the map too. Only you see them.' },
-    l: { kicker: 'Your leader', contact: 'Get in touch', wa: 'WhatsApp Matan', waText: 'Hi Matan, about the expedition', phone: 'Phone', mail: 'Email', copy: 'Copy', copied: 'Copied', ig: 'Instagram' },
+    l: { kicker: 'Your leader', contact: 'Get in touch', wa: 'WhatsApp Matan', waText: 'Hi Matan, about the expedition', phone: 'Phone', mail: 'Email', copy: 'Copy', copied: 'Copied', ig: 'Instagram', fb: 'Facebook', web: 'Website', waTo: 'WhatsApp ', contactOf: 'Contact ', kickers: 'Your leaders' },
     sched: { date: 'Date', stay: 'Overnight', sun: 'Sunrise / sunset', look: 'Look for', ex: 'Photo exercise', map: 'Show on map' },
     lookFor: 'Look for today', exercise: "Today's exercise", packed: (a, b) => `My lists: ${a}/${b}`, readOf: (a, b) => `${a} of ${b} stories read`,
     readMore: 'Read more', less: 'Less', read: 'Read', today: 'Today',
@@ -2417,7 +2438,41 @@ $('#info').addEventListener('change', e => {
 });
 
 // ---------- leader ----------
+// two or more leaders (vault `leaders: [{name, role, photo, roles, bio, story, wa, waText, phone, email, instagram, facebook, web}]`):
+// one expandable card each, with that leader's details, contact and social links
+function leaderCards(list) {
+  const l = L.l;
+  const faceOf = p => p.photo ? `<img src="${esc(p.photo)}" alt="${esc(p.name[lang])}">`
+    : `<span class="ini">${esc(p.name.en.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase())}</span>`;
+  const cline = (k, v) => v ? `<div class="cline"><b>${esc(k)}</b><span>${esc(v)}</span><button class="btn small" type="button" data-copy="${esc(v)}">${ic('copy')}<span>${esc(l.copy)}</span></button></div>` : '';
+  return `<div class="lcards" style="--i:1">${list.map((p, i) => {
+    const first = p.name[lang].split(' ')[0], st = p.story && p.story[lang];
+    const acts = [
+      p.wa ? `<a class="btn wa" href="https://wa.me/${p.wa}?text=${encodeURIComponent(tx(p.waText) || l.waText)}" target="_blank" rel="noopener">${ic('wa')}<span>${esc(l.waTo + first)}</span></a>` : '',
+      p.instagram ? `<a class="btn" href="${esc(p.instagram)}" target="_blank" rel="noopener">${ic('ig')}<span>${esc(l.ig)}</span></a>` : '',
+      p.facebook ? `<a class="btn" href="${esc(p.facebook)}" target="_blank" rel="noopener">${ic('fb')}<span>${esc(l.fb)}</span></a>` : '',
+      p.web ? `<a class="btn" href="${esc(p.web)}" target="_blank" rel="noopener">${ic('globe')}<span>${esc(l.web)}</span></a>` : ''].join('');
+    const lines = cline(l.phone, p.phone) + cline(l.mail, p.email);
+    return `<div class="lcard"><button class="lhead" type="button" data-lcard aria-expanded="false"><span class="face">${faceOf(p)}</span><span><b class="nm">${esc(p.name[lang])}</b><small>${esc(p.role[lang])}</small></span>${ic('next')}</button>
+      <div class="lpanel"><div><div class="lin">
+        ${p.roles && p.roles.length ? `<div class="roles">${p.roles.map(r => `<div><b>${esc(r[lang][0])}</b><span>${esc(r[lang][1])}</span></div>`).join('')}</div>` : ''}
+        ${p.bio ? `<div class="bio">${p.bio[lang].map(t => `<p>${esc(t)}</p>`).join('')}</div>` : ''}
+        ${st ? `<article class="lstory"><p class="lbl">${esc(st.kicker || '')}</p>${st.title ? `<h3>${esc(st.title)}</h3>` : ''}${st.by ? `<p class="by">${esc(st.by)}</p>` : ''}${st.text.map(t => `<p class="t">${esc(t)}</p>`).join('')}</article>` : ''}
+        <section class="contact"><h3 style="margin:0;font-size:20px;color:var(--bark)">${esc(l.contactOf + first)}</h3>${acts ? `<div class="acts">${acts}</div>` : ''}${lines ? `<div class="clines">${lines}</div>` : ''}</section>
+      </div></div></div></div>`;
+  }).join('')}</div>`;
+}
 function renderLeader() {
+  if (T.leaders && T.leaders.length > 1) {
+    const g = T.leaders.find(p => p.group) || T.leader;
+    $('#leader').innerHTML = `<div class="wrap">
+    <header class="rh" style="--i:0"><p class="lbl">${esc(L.l.kickers)}</p></header>
+    ${leaderCards(T.leaders)}
+    ${g && g.group ? `<p class="lgroup" style="--i:2">${esc(g.group[lang])}</p>` : ''}
+    <div class="closing" style="--i:3"><p>${esc(T.closing[lang])}</p><span class="logo" role="img" aria-label="MW Photo Tours"></span></div>
+  </div>`;
+    return;
+  }
   const ld = T.leader, l = L.l, [first, ...rest] = ld.name[lang].split(' ');
   const face = ld.photo ? `<img src="${esc(ld.photo)}" alt="${esc(ld.name[lang])}">` : `<span class="mono"><span class="mark"></span></span>`;
   const wa = `https://wa.me/${ld.wa}?text=${encodeURIComponent(tx(ld.waText) || l.waText)}`;
@@ -2441,6 +2496,8 @@ function renderLeader() {
   </div>`;
 }
 $('#leader').addEventListener('click', e => {
+  const h = e.target.closest('[data-lcard]');
+  if (h) { const c = h.closest('.lcard'), on = !c.classList.contains('open'); c.classList.toggle('open', on); h.setAttribute('aria-expanded', on); return; }
   const b = e.target.closest('[data-copy]'); if (!b) return;
   const done = () => { b.lastElementChild.textContent = L.l.copied; setTimeout(() => { b.lastElementChild.textContent = L.l.copy; }, 1600); };
   const fallback = () => { const s = b.previousElementSibling, r = document.createRange(); r.selectNodeContents(s); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); };
