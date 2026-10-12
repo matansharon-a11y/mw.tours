@@ -983,7 +983,7 @@ function applyLang() {
   { const o = $('#logout'); if (o) { o.setAttribute('aria-label', L.logout); o.title = L.logout; } }
   const title = VAULT.pub.title[lang];
   $$('[data-pub="title"]').forEach(el => { el.innerHTML = `<span>${esc(title.a)}</span> <b>${esc(title.b)}</b>`; });
-  $$('[data-pub="kicker"]').forEach(el => { el.textContent = VAULT.pub.kicker[lang]; });
+  $$('[data-pub="kicker"]').forEach(el => { const k = VAULT.pub.kicker && VAULT.pub.kicker[lang]; el.textContent = k || ''; el.hidden = !k; });
   $$('[data-pub="dates"]').forEach(el => { el.textContent = VAULT.pub.dates[lang]; });
   document.title = `${title.a} ${title.b}`;
   if (T) { renderAll(); renderBack(); }
@@ -2021,7 +2021,7 @@ function renderCard(anim) {
     const title = T.title[lang];
     cls += ' intro';
     html = `<div class="ctl"><button type="button" data-cardclose aria-label="${L.close}">${ic('x')}</button></div><div class="c">
-      <p class="lbl">${esc(T.kicker[lang])}</p>
+      ${T.kicker && T.kicker[lang] ? `<p class="lbl">${esc(T.kicker[lang])}</p>` : ''}
       <h1 class="tt"><span>${esc(title.a)}</span> <b>${esc(title.b)}</b></h1>
       <p class="dates">${esc(T.dates[lang])}</p>
       <p class="count">${ic('plane')}<span>${esc(countText(false))}</span></p>
