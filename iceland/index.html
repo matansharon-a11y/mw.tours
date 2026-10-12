@@ -928,7 +928,7 @@ const UI = {
       morning: 'בבוקר', day: 'במהלך היום', yes: 'כלול', no: 'לא כלול', of: (a, b) => `${a}/${b}`, map: 'נתוני המפה',
       days: 'יום אחר יום', cal: 'הוספה ליומן', lists: 'רשימות הציוד', here: 'עכשיו בישראל', there: n => `עכשיו ב${n}`, ahead: h => `מקדים את ישראל ב-${h} שעות`, behind: h => h === '1' ? 'שעה אחת אחרי ישראל' : `${h} שעות אחרי ישראל`, same: 'אותה שעה כמו בישראל',
       install: { title: 'שמרו את המסע בטלפון', text: ['באייפון: כפתור השיתוף, ואז "הוספה למסך הבית".', 'באנדרואיד: התפריט, ואז "התקנת אפליקציה".', 'אחרי הפתיחה הראשונה העמוד עובד גם בלי קליטה.'] },
-      calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג', myFl: 'הטיסה שלך', bye: 'היום האחרון של הטיול. תודה שהייתם חלק מהמסע הזה. תיהנו מכל רגע אחרון, ודרך צלחה הביתה!',
+      calTitle: 'מסע צילום', calDep: 'מחר טסים', myFl: 'הטיסה שלך', bye: 'היום האחרון של הטיול. תודה שהייתם חלק מהמסע הזה. תיהנו מכל רגע אחרון, ודרך צלחה הביתה!',
       ticket: 'הוספת טיסות', ticketEdit: 'עריכת הטיסה', flPrivate: 'הטיסות של כל נוסע פרטיות: רק מי שהוסיף את הכרטיס רואה אותן.', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
       noFlights: 'הוסיפו את הטיסות שלכם, מהבית אל המסע ובחזרה, והמסלול שלכם יופיע גם על המפה. רק אתם רואים אותן.' },
     l: { kicker: 'המדריך שלכם', contact: 'דברו איתי', wa: 'וואטסאפ למתן', waText: 'היי מתן, לגבי המסע', phone: 'טלפון', mail: 'מייל', copy: 'העתקה', copied: 'הועתק', ig: 'אינסטגרם', fb: 'פייסבוק', web: 'אתר', waTo: 'וואטסאפ ל', contactOf: 'ליצירת קשר עם ', kickers: 'המדריכים שלכם' },
@@ -963,7 +963,7 @@ const UI = {
       morning: 'Mornings', day: 'Daytime', yes: 'Included', no: 'Not included', of: (a, b) => `${a}/${b}`, map: 'Map data',
       days: 'Day by day', cal: 'Add to calendar', lists: 'Packing lists', here: 'Now in Israel', there: n => `Now in ${n}`, ahead: h => `${h} hours ahead of Israel`, behind: h => h === '1' ? 'One hour behind Israel' : `${h} hours behind Israel`, same: 'Same time as Israel',
       install: { title: 'Keep it on your phone', text: ['iPhone: the Share button, then "Add to Home Screen".', 'Android: the menu, then "Install app".', 'After the first visit the page works without signal too.'] },
-      calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion', myFl: 'Your flight', bye: 'Last day of the trip. Thank you for being part of this expedition. Enjoy every last moment, and safe travels home!',
+      calTitle: 'Photo expedition', calDep: 'Flying tomorrow', myFl: 'Your flight', bye: 'Last day of the trip. Thank you for being part of this expedition. Enjoy every last moment, and safe travels home!',
       ticket: 'Add flights', ticketEdit: 'Edit this flight', flPrivate: 'Each traveler\'s flights are private: only the one who added the ticket sees them.', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
       noFlights: 'Add your flights, from home to the expedition and back, and your own route shows on the map too. Only you see them.' },
     l: { kicker: 'Your leader', contact: 'Get in touch', wa: 'WhatsApp Matan', waText: 'Hi Matan, about the expedition', phone: 'Phone', mail: 'Email', copy: 'Copy', copied: 'Copied', ig: 'Instagram', fb: 'Facebook', web: 'Website', waTo: 'WhatsApp ', contactOf: 'Contact ', kickers: 'Your leaders' },
@@ -2285,10 +2285,16 @@ function cleanTickets() {
     if (!Array.isArray(a)) { store.set(FLKEY, '[]'); return; }
     const own = a.filter(r => r && r.by === me && r.v === 3); if (own.length !== a.length) store.set(FLKEY, JSON.stringify(own)); } catch (e) {}
 }
+// the Flights block: the tour's own flights inside the trip's area (vault flights.rows with both a from and a to, e.g. the
+// domestic flights in India; meeting points and closing lines are not flights) and the traveler's own, all by date
 function flightRows() {
-  const mine = myTickets();
-  if (mine) return mine.map((r, n) => ({ own: n, date: r.iso ? `${r.iso.slice(8, 10)}.${r.iso.slice(5, 7)}` : '', time: clock(r.time), from: r.from || '', to: r.to || '', flight: r.flight || '', arrive: clock(r.arrive) }));
-  return [];   // nothing until the traveler adds their own ticket
+  const isoOf = ddmm => { const d = T.days.find(x => x.date && `${x.date.slice(8, 10)}.${x.date.slice(5, 7)}` === ddmm); return d ? d.date : (T.start || '').slice(0, 4) + '-' + ddmm.slice(3, 5) + '-' + ddmm.slice(0, 2); };
+  const t = v => typeof v === 'string' ? v : '';
+  const mine = (myTickets() || []).map((r, n) => ({ own: n, iso: r.iso || '', at: t(r.time), date: r.iso ? `${r.iso.slice(8, 10)}.${r.iso.slice(5, 7)}` : '', time: clock(r.time), from: r.from || '', to: r.to || '', flight: r.flight || '', arrive: clock(r.arrive) }));
+  const tour = ((T.flights && T.flights.rows) || []).filter(r => r.from && r.to && !r.bye)
+    .map(r => ({ tour: true, iso: r.dep ? r.dep.slice(0, 10) : isoOf(r.date || ''), at: r.dep ? r.dep.slice(11, 16) : t(r.time), date: r.date || '', time: r.time || '', from: r.from, to: r.to, flight: r.flight || '', arrive: r.arrive || '', dep: r.dep, arr: r.arr }))
+    .filter(g => !mine.some(m => m.iso === g.iso && m.from === g.from && m.to === g.to));   // the traveler typed the same flight in: one row
+  return [...tour, ...mine].sort((a, b) => (a.iso + (a.at || '99')).localeCompare(b.iso + (b.at || '99')));
 }
 async function addTickets(edit) {
   if (!window.MWFlights) return;
@@ -2360,7 +2366,7 @@ function renderInfo() {
   $('#info').innerHTML = heroHTML('info', I.kicker, I.title, I.lede, qa) + `<div class="wrap">
     <div class="clocks" id="blk-time" style="--i:0"><div class="clock"><span>${esc(I.here)}</span><b id="clk-il">--:--</b></div><div class="clock"><span>${esc(I.there(T.region[lang]))}</span><b id="clk-as">--:--</b><small id="clk-diff"></small></div></div>
     <div class="facts" style="--i:1">${factsHTML()}</div>
-    <section class="block" id="blk-flights" style="--i:2"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${canTicket() ? esc(I.ticket) : I.flights}</h3>${canTicket() ? `<button class="rbtn plusb" type="button" data-ticket aria-label="${esc(I.ticket)}" title="${esc(I.ticket)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : ''}${inViewer ? '' : `<button class="rbtn" type="button" data-ics aria-label="${esc(I.cal)}" title="${esc(I.cal)}">${ic('calendar')}</button>`}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(window.MW_AS ? I.flPrivate : I.noFlights)}</p></div>`}</section>
+    <section class="block" id="blk-flights" style="--i:2"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${canTicket() ? esc(I.ticket) : I.flights}</h3>${canTicket() ? `<button class="rbtn plusb" type="button" data-ticket aria-label="${esc(I.ticket)}" title="${esc(I.ticket)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : ''}${inViewer ? '' : `<button class="rbtn" type="button" data-ics aria-label="${esc(I.cal)}" title="${esc(I.cal)}">${ic('calendar')}</button>`}</div>${myRows.length ? `<div class="flights">${flights}</div>${myRows.some(r => r.tour) && fl[lang] && fl[lang].note ? `<p class="note">${esc(fl[lang].note)}</p>` : ''}` : `<div class="flights empty"><p>${esc(window.MW_AS ? I.flPrivate : I.noFlights)}</p></div>`}</section>
     <section class="block" id="blk-days" style="--i:3"><div class="bh"><span class="ring">${ic('calendar')}</span><h3>${esc(I.days)}</h3></div><div class="dlist">${days}</div></section>
     <section class="block" id="blk-stays" style="--i:4"><div class="bh"><span class="ring">${ic('bed')}</span><h3>${I.stays}</h3></div><div class="stays">${stays}</div></section>
     <section class="block" id="blk-weather" style="--i:5"><div class="bh"><span class="ring">${ic('sun')}</span><h3>${I.weather}</h3></div>
@@ -2396,7 +2402,8 @@ function downloadICS() {
     'BEGIN:VEVENT', `UID:${T.slug}-trip@mw.photography`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${ymd(T.days[0].date)}`, `DTEND;VALUE=DATE:${ymd(endD)}`,
     `SUMMARY:${icsEsc(`MW Photo Tours · ${title}`)}`, 'END:VEVENT'];
   const lt = (d, t) => `${d.replace(/-/g, '')}T${t.replace(':', '')}00`;   // a ticket's own local time
-  (myTickets() ? myTickets().filter(r => r.iso && r.time).map(r => ({ ...r, local: true })) : flightRows().filter(r => r.dep)).forEach((r, i) => {
+  // every flight in the Flights block: the tour's own (exact times) and the traveler's (their local times)
+  flightRows().map(r => r.own != null ? { ...myTickets()[r.own], local: true } : r).filter(r => r.local ? r.iso && r.time : r.dep).forEach((r, i) => {
     lines.push('BEGIN:VEVENT', `UID:${T.slug}-flight-${i}@mw.photography`, `DTSTAMP:${stamp}`, `DTSTART:${r.local ? lt(r.iso, r.time) : z(r.dep)}`);
     if (r.arr && !r.local) lines.push(`DTEND:${z(r.arr)}`);
     lines.push(`SUMMARY:${icsEsc(r.cal ? tx(r.cal) : `${tx(r.flight)} · ${r.from} → ${r.to}${r.local && r.arrive ? ` · ${r.arrive}` : ''}`)}`, `DESCRIPTION:${icsEsc(`${L.i.calTitle}: ${title}`)}`);
