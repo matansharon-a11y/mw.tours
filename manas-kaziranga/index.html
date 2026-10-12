@@ -414,7 +414,10 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:20px 18px}
 .fact{display:flex;align-items:center;gap:14px;min-width:0}
 .fact b{display:block;font-size:13px;font-weight:700;color:var(--muted)}
-.fact span{display:block;font-size:17px;color:var(--paper)}
+.fact>div>span{display:block;font-size:17px;color:var(--paper)}
+.fact .ring{width:48px;height:48px;display:grid;place-items:center;border:1px solid rgba(228,170,124,.42);background:radial-gradient(circle at 50% 35%,rgba(254,251,241,.1),rgba(254,251,241,.02) 70%);color:var(--gold-soft);box-shadow:inset 0 0 0 4px rgba(10,9,8,.18)}
+.fact .ring .ic{width:21px;height:21px;stroke-width:1.6}
+.fact .feet{display:flex;gap:3px;margin:3px 0 2px}
 .feet{display:flex;gap:2px}
 .feet .ic{width:18px;height:18px}
 .feet .ic.off{opacity:.3}
@@ -699,7 +702,7 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
   @keyframes sheetIn{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:none}}
   .daycard{width:100%;max-height:38vh}
 }
-@media (max-width:560px){.wx{grid-template-columns:1fr;gap:12px}.wx svg{max-width:300px}.lead{grid-template-columns:1fr;justify-items:start;gap:18px;padding:20px}.face{width:96px;height:96px;padding:4px}.fact{align-items:flex-start}.fact .ring{width:36px;height:36px}.fact span{font-size:15.5px}.bioband{grid-template-columns:1fr;gap:28px}
+@media (max-width:560px){.wx{grid-template-columns:1fr;gap:12px}.wx svg{max-width:300px}.lead{grid-template-columns:1fr;justify-items:start;gap:18px;padding:20px}.face{width:96px;height:96px;padding:4px}.fact{align-items:flex-start}.fact .ring{width:40px;height:40px}.fact .ring .ic{width:18px;height:18px}.fact>div>span{font-size:15.5px}.bioband{grid-template-columns:1fr;gap:28px}
   .bioband.has-story{grid-template-areas:"bio" "ph" "story";row-gap:28px}
   .bioband.has-story .ph{position:static}
   .bioband.has-story .lstory{margin-top:8px}.bioband .ph{max-width:420px}
