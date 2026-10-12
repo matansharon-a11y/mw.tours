@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><link rel="icon" href="../assets/favicon.ico" sizes="32x32"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png"><script src="../assets/viewas.js?v=202610112234"></script><script src="../assets/members.js?v=202610112234" defer></script><script src="../assets/tickets.js?v=202610112234" defer></script><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><link rel="icon" href="../assets/favicon.ico" sizes="32x32"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png"><script src="../assets/viewas.js?v=202610120809"></script><script src="../assets/members.js?v=202610120809" defer></script><script src="../assets/tickets.js?v=202610120809" defer></script><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>לב הרי הפירנאים</title>
 <link rel="stylesheet" href="../assets/fonts.css?v=202610111325">
 <style>
@@ -902,7 +902,7 @@ const UI = {
       days: 'יום אחר יום', cal: 'הוספה ליומן', lists: 'רשימות הציוד', here: 'עכשיו בישראל', there: n => `עכשיו ב${n}`, ahead: h => `מקדים את ישראל ב-${h} שעות`, behind: h => h === '1' ? 'שעה אחת אחרי ישראל' : `${h} שעות אחרי ישראל`, same: 'אותה שעה כמו בישראל',
       install: { title: 'שמרו את המסע בטלפון', text: ['באייפון: כפתור השיתוף, ואז "הוספה למסך הבית".', 'באנדרואיד: התפריט, ואז "התקנת אפליקציה".', 'אחרי הפתיחה הראשונה העמוד עובד גם בלי קליטה.'] },
       calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג', myFl: 'הטיסה שלך',
-      ticket: 'הוספת כרטיס טיסה', ticketEdit: 'עריכת הטיסה', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
+      ticket: 'הוספת כרטיס טיסה', ticketEdit: 'עריכת הטיסה', flPrivate: 'הטיסות של כל נוסע פרטיות: רק מי שהוסיף את הכרטיס רואה אותן.', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
       noFlights: 'הטיסות שלכם יופיעו כאן אחרי שתוסיפו את כרטיסי הטיסה (PDF, ‏JPG או PNG). הכרטיס נקרא בטלפון שלכם ולא נשלח לשום מקום.' },
     l: { kicker: 'המדריך שלכם', contact: 'דברו איתי', wa: 'וואטסאפ למתן', waText: 'היי מתן, לגבי המסע', phone: 'טלפון', mail: 'מייל', copy: 'העתקה', copied: 'הועתק', ig: 'אינסטגרם' },
     sched: { date: 'תאריך', stay: 'לינה', sun: 'זריחה / שקיעה', look: 'מה לחפש', ex: 'תרגיל צילום', map: 'להראות במפה' },
@@ -937,7 +937,7 @@ const UI = {
       days: 'Day by day', cal: 'Add to calendar', lists: 'Packing lists', here: 'Now in Israel', there: n => `Now in ${n}`, ahead: h => `${h} hours ahead of Israel`, behind: h => h === '1' ? 'One hour behind Israel' : `${h} hours behind Israel`, same: 'Same time as Israel',
       install: { title: 'Keep it on your phone', text: ['iPhone: the Share button, then "Add to Home Screen".', 'Android: the menu, then "Install app".', 'After the first visit the page works without signal too.'] },
       calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion', myFl: 'Your flight',
-      ticket: 'Add your flight ticket', ticketEdit: 'Edit this flight', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
+      ticket: 'Add your flight ticket', ticketEdit: 'Edit this flight', flPrivate: 'Each traveler\'s flights are private: only the one who added the ticket sees them.', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
       noFlights: 'Your flights will show here once you add your flight tickets (PDF, JPG or PNG). The ticket is read on your phone and is not sent anywhere.' },
     l: { kicker: 'Your leader', contact: 'Get in touch', wa: 'WhatsApp Matan', waText: 'Hi Matan, about the expedition', phone: 'Phone', mail: 'Email', copy: 'Copy', copied: 'Copied', ig: 'Instagram' },
     sched: { date: 'Date', stay: 'Overnight', sun: 'Sunrise / sunset', look: 'Look for', ex: 'Photo exercise', map: 'Show on map' },
@@ -1017,6 +1017,7 @@ const buildTrip = () => spreadDays(withTickets(personalize(structuredClone(RAW))
 // the traveler's own flights shape their days: a flight on a trip day is shown on that day, and a flight before the
 // first day or after the last one adds a day of its own, so the dates on the map follow their ticket
 function withTickets(t) {
+  if (window.MW_AS) return t;   // flights are private, also from the admin's view
   let rows = [];
   try { const a = JSON.parse(store.get('mw-tour-' + t.slug + '-flights') || 'null'), me = meId(); if (Array.isArray(a)) rows = a.filter(r => r && r.by === me && r.v === 2 && /^\d{4}-\d\d-\d\d$/.test(r.iso || '')); } catch (e) {}
   if (!rows.length) return t;
@@ -2183,7 +2184,7 @@ const canTicket = () => !inViewer && !window.MW_AS;
 // each saved flight carries who added it, and only that traveler sees it (a shared phone or an old copy never shows
 // someone else's flights)
 function meId() { try { const m = JSON.parse(store.get(KEY + '-member') || 'null'); return m && m.id ? String(m.id) : 'local'; } catch (e) { return 'local'; } }
-function myTickets() { try { const a = JSON.parse(store.get(FLKEY) || 'null'), me = meId(); const own = Array.isArray(a) ? a.filter(r => r && r.by === me && r.v === 2) : []; return own.length ? own : null; } catch (e) { return null; } }
+function myTickets() { if (window.MW_AS) return null; try { const a = JSON.parse(store.get(FLKEY) || 'null'), me = meId(); const own = Array.isArray(a) ? a.filter(r => r && r.by === me && r.v === 2) : []; return own.length ? own : null; } catch (e) { return null; } }
 // someone else's flights left in this browser's copy (or an untagged copy from before) are removed from it, and the
 // cleaned copy is what syncs back to this traveler's account
 function cleanTickets() {
@@ -2271,7 +2272,7 @@ function renderInfo() {
     <div class="clocks" id="blk-time" style="--i:0"><div class="clock"><span>${esc(I.here)}</span><b id="clk-il">--:--</b></div><div class="clock"><span>${esc(I.there(T.region[lang]))}</span><b id="clk-as">--:--</b><small id="clk-diff"></small></div></div>
     <div class="facts" style="--i:1">${factsHTML()}</div>
     <section class="block" id="blk-days" style="--i:2"><div class="bh"><span class="ring">${ic('calendar')}</span><h3>${esc(I.days)}</h3></div><div class="dlist">${days}</div></section>
-    <section class="block" id="blk-flights" style="--i:3"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${I.flights}</h3>${inViewer ? '' : `<button class="btn small" type="button" data-ics style="margin-inline-start:auto">${ic('download')}<span>${esc(I.cal)}</span></button>`}${canTicket() ? `<button class="btn small" type="button" data-ticket>${ic('plane')}<span>${esc(I.ticket)}</span></button>` : ''}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(I.noFlights)}</p></div>`}</section>
+    <section class="block" id="blk-flights" style="--i:3"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${I.flights}</h3>${inViewer ? '' : `<button class="btn small" type="button" data-ics style="margin-inline-start:auto">${ic('download')}<span>${esc(I.cal)}</span></button>`}${canTicket() ? `<button class="btn small" type="button" data-ticket>${ic('plane')}<span>${esc(I.ticket)}</span></button>` : ''}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(window.MW_AS ? I.flPrivate : I.noFlights)}</p></div>`}</section>
     <section class="block" id="blk-stays" style="--i:4"><div class="bh"><span class="ring">${ic('bed')}</span><h3>${I.stays}</h3></div><div class="stays">${stays}</div></section>
     <section class="block" id="blk-weather" style="--i:5"><div class="bh"><span class="ring">${ic('sun')}</span><h3>${I.weather}</h3></div>
       <div class="wx">${weatherSVG(wx)}<p>${esc(wx[lang])}</p></div></section>

@@ -37,7 +37,7 @@ commit finished work straight to `main`; there is no build step.
   coast, shaded relief), detail layers fade at their edges; `geo.credits` replaces the default credit line.
 - Flight tickets: "Add your flight ticket" beside "Add to calendar" (`assets/tickets.js`, read in the browser: pdf.js for
   PDFs, Tesseract OCR for JPG/PNG; nothing is uploaded). The traveler checks the rows, they are kept in
-  `mw-tour-<slug>-flights` (synced like the lists, so the admin's view-as shows them). The Flights block is empty until
+  `mw-tour-<slug>-flights` (synced like the lists to the traveler's own account; private: the admin's view-as does not show them). The Flights block is empty until
   then for everyone (also travelers with a `personal` entry; that only shapes their map days now).
   Each added flight has a small pencil that opens the sheet on that row to edit it.
   Flights also shape the map days (`withTickets`, rebuilt from `RAW` on save): a flight on a trip day shows on that day's
@@ -45,6 +45,8 @@ commit finished work straight to `main`; there is no build step.
   flights before the first day go on day 0 (added as "Departure" when the trip has none).
   Saved flights carry `by` (the member id) and `v: 2` (all earlier saves were cleared on 11.10.2026); only that traveler sees them. `members.js` keeps one owner per browser
   (`mw-tour-<slug>-owner`): when a different traveler signs in there, the lists/field/flights on it are cleared first.
+  Server side one browser = one traveler per expedition (`supabase-update-one-traveler-per-browser.txt`: trigger on
+  member_devices), so a browser used for two names never saves into the other person's account.
   A ticket with several travelers (a couple on one booking): the signed-in name is matched to a name on it (Mr/Ms …,
   SURNAME/GIVEN MR; Sara/Sarah, Haim/Chaim count); when each traveler's part holds different flights, only theirs are
   taken, otherwise the shared ones; the sheet says whose flights these are, or warns when the name is not on the ticket.

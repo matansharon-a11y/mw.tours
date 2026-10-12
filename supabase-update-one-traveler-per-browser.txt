@@ -1,0 +1,36 @@
+-- =====================================================================
+-- MW Photo Tours · update: one traveler per browser, private flights
+-- A browser that was used to sign in as two travelers (for example testing as Matan, then as yourself) stayed
+-- linked to both, and its lists and flights could be saved into the other person's account. From now on a browser
+-- belongs to the last traveler who signed in on it, and saved flights stay with the traveler who added them.
+-- Run once: Supabase → SQL Editor → New query → paste all of this → Run.
+-- =====================================================================
+
+-- 1. Today's links: for each browser and expedition keep only the most recent sign-in
+delete from public.member_devices d
+ using public.members m
+ where m.id = d.member_id
+   and exists (select 1 from public.member_devices d2 join public.members m2 on m2.id = d2.member_id
+               where d2.user_id = d.user_id and m2.tour_slug = m.tour_slug
+                 and (d2.linked_at, d2.member_id::text) > (d.linked_at, d.member_id::text));
+
+-- 2. From now on: signing in as someone on a browser unlinks the other traveler(s) of that expedition there
+create or replace function public.one_member_per_device() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  delete from public.member_devices d
+   using public.members m, public.members n
+   where d.user_id = new.user_id and d.member_id <> new.member_id
+     and m.id = d.member_id and n.id = new.member_id and m.tour_slug = n.tour_slug;
+  return new;
+end $$;
+drop trigger if exists one_member_per_device on public.member_devices;
+create trigger one_member_per_device after insert on public.member_devices
+  for each row execute function public.one_member_per_device();
+
+-- 3. Saved flights: keep in each traveler's account only the flights that traveler added
+update public.progress p
+   set state = jsonb_set(p.state, '{flights}', to_jsonb(coalesce((
+         select jsonb_agg(e)::text from jsonb_array_elements((p.state->>'flights')::jsonb) e
+          where e->>'by' = p.member_id::text and e->>'v' = '2'), '[]')))
+ where p.state ? 'flights' and p.state->>'flights' ~ '^\s*\[';
