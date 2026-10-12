@@ -62,7 +62,10 @@ const CSS = `
 .mwf .rows{display:grid;gap:12px}
 .mwf .fr{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border-radius:16px;background:rgba(254,251,241,.04);border:1px solid rgba(254,251,241,.08)}
 .mwf .fr.on{border-color:rgba(244,175,86,.6)}
-.mwf .fr .t4{grid-column:1 / -1;display:grid;grid-template-columns:1.4fr 1fr 1fr 1.3fr auto;gap:8px;align-items:end}
+.mwf .tm{display:grid;gap:4px;font-size:11.5px;color:rgba(244,244,244,.56)}
+.mwf .tm div{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:4px}
+.mwf select{-webkit-appearance:none;appearance:none;text-align-last:center;width:100%;min-width:0;height:40px;padding-inline:2px;border-radius:10px;border:1px solid rgba(254,251,241,.22);background:rgba(10,9,8,.5);color:#FEFBF1;font:600 14px/1 inherit;font-family:inherit;color-scheme:dark;text-align:center}
+.mwf select:focus{outline:none;border-color:#F4AF56}
 .mwf label{position:relative;display:grid;gap:4px;font-size:11.5px;color:rgba(244,244,244,.56)}
 .mwf input{width:100%;min-width:0;height:40px;padding-inline:10px;border-radius:10px;border:1px solid rgba(254,251,241,.22);background:rgba(10,9,8,.5);color:#FEFBF1;font:600 14px/1 inherit;font-family:inherit;color-scheme:dark}
 .mwf input:focus{outline:none;border-color:#F4AF56}
@@ -74,14 +77,14 @@ const CSS = `
 .mwf .sug b{color:#F4AF56;letter-spacing:.06em}
 .mwf .sug span small{display:block;color:rgba(244,244,244,.5);font-size:11.5px}
 .mwf .sug .no{padding:10px 12px;font-size:13px;color:rgba(244,244,244,.6)}
-.mwf .rm{width:38px;height:40px;border-radius:10px;border:1px solid rgba(240,138,122,.4);background:none;color:#F7B2A6;font-size:18px;cursor:pointer}
+.mwf .rm{grid-column:1 / -1;justify-self:end;height:34px;padding-inline:14px;font-size:13px !important;font-weight:600;font-family:inherit;width:auto;border-radius:10px;border:1px solid rgba(240,138,122,.4);background:none;color:#F7B2A6;font-size:18px;cursor:pointer}
 .mwf .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .mwf .acts .sp{flex:1}
 .mwf button.b{min-height:42px;padding-inline:16px;border-radius:64px;border:1px solid rgba(244,244,244,.35);background:none;color:#F4F4F4;font:700 14px/1 inherit;font-family:inherit;cursor:pointer}
 .mwf button.b.go{border-color:#F4AF56;background:rgba(244,175,86,.14)}
 .mwf button.b.clear{border-color:rgba(240,138,122,.45);color:#F7B2A6}
 .mwf small.pv{font-size:12px;color:rgba(244,244,244,.5)}
-@media (max-width:560px){.mwf form{padding:18px 14px}.mwf .fr .t4{grid-template-columns:1fr 1fr}.mwf .fr .t4 .w2{grid-column:1 / -1}.mwf .rm{width:100%}}
+@media (max-width:560px){.mwf form{padding:18px 14px}.mwf .fr{padding:10px}}
 `;
 
 // the sheet: the traveler's flights to check, add, edit or remove; resolves with the saved list (or null)
@@ -104,15 +107,32 @@ function open(opts = {}) {
       const code = r[k], city = r[k + 'City'];
       return `<label class="ap">${esc(w[k])}<input data-ap="${k}" type="text" dir="auto" placeholder="${esc(w.pick)}" value="${esc(code ? `${code}${city ? ' · ' + city : ''}` : '')}"${code && r[k + 'LL'] ? ' class="ok"' : ''}><small>${esc(r[k + 'Name'] || '')}</small></label>`;
     };
-    const inp = (r, k, label, type, extra = '') => `<label class="${extra}">${esc(label)}<input data-k="${k}" type="${type}" dir="ltr" value="${esc(r[k] || '')}"${type === 'text' && k !== 'flight' ? ' inputmode="numeric" maxlength="5" placeholder="00:00"' : ''}></label>`;
+    const inp = (r, k, label, type, extra = '') => `<label class="${extra}">${esc(label)}<input data-k="${k}" type="${type}" dir="ltr" value="${esc(r[k] || '')}"></label>`;
+    // a time as three scroll wheels (hour, minute, AM/PM); kept as 24-hour "HH:MM"
+    const opt = (v, t, on) => `<option value="${v}"${on ? ' selected' : ''}>${t}</option>`;
+    const timeField = (r, k, label) => {
+      const m = String(r[k] || '').match(/^(\d\d):(\d\d)$/), H = m ? +m[1] : null, M = m ? +m[2] : null;
+      const h12 = H == null ? null : (H % 12 || 12), pm = H != null && H >= 12;
+      return `<div class="tm" data-t="${k}"><span>${esc(label)}</span><div dir="ltr">
+        <select data-p="h" aria-label="${esc(label)}">${opt('', '--', H == null)}${Array.from({ length: 12 }, (_, i) => opt(i + 1, i + 1, h12 === i + 1)).join('')}</select>
+        <select data-p="m">${opt('', '--', M == null)}${Array.from({ length: 60 }, (_, i) => opt(i, String(i).padStart(2, '0'), M === i)).join('')}</select>
+        <select data-p="a">${opt('AM', 'AM', !pm)}${opt('PM', 'PM', pm)}</select></div></div>`;
+    };
+    const timeOf = el => {
+      const h = el.querySelector('[data-p="h"]').value, m = el.querySelector('[data-p="m"]').value, a = el.querySelector('[data-p="a"]').value;
+      if (h === '' || m === '') return '';
+      const H = (+h % 12) + (a === 'PM' ? 12 : 0); return `${String(H).padStart(2, '0')}:${String(+m).padStart(2, '0')}`;
+    };
     const draw = () => {
       box.innerHTML = rows.map((r, n) => `<div class="fr" data-n="${n}">${apField(r, 'from')}${apField(r, 'to')}
-        <div class="t4">${inp(r, 'iso', w.date, 'date', 'w2')}${inp(r, 'time', w.dep, 'text')}${inp(r, 'arrive', w.arr, 'text')}${inp(r, 'flight', w.no, 'text', 'w2')}
-        <button type="button" class="rm" data-rm="${n}" aria-label="${esc(w.del)}">×</button></div></div>`).join('');
+        ${inp(r, 'iso', w.date, 'date')}${inp(r, 'flight', w.no, 'text')}
+        ${timeField(r, 'time', w.dep)}${timeField(r, 'arrive', w.arr)}
+        <button type="button" class="rm" data-rm="${n}" aria-label="${esc(w.del)}">${esc(w.del)}</button></div>`).join('');
     };
     const read = () => box.querySelectorAll('.fr').forEach(el => {
       const r = rows[+el.dataset.n];
-      el.querySelectorAll('input[data-k]').forEach(i => { const k = i.dataset.k; r[k] = k === 'time' || k === 'arrive' ? hhmm(i.value) : k === 'flight' ? i.value.trim().toUpperCase() : i.value.trim(); });
+      el.querySelectorAll('input[data-k]').forEach(i => { const k = i.dataset.k; r[k] = k === 'flight' ? i.value.trim().toUpperCase() : i.value.trim(); });
+      el.querySelectorAll('.tm').forEach(t => { r[t.dataset.t] = timeOf(t); });
     });
     const closeSug = () => v.querySelectorAll('.sug').forEach(s => s.remove());
     const choose = (r, k, a) => { r[k] = a[0]; r[k + 'City'] = a[1]; r[k + 'Country'] = a[2]; r[k + 'LL'] = [a[3], a[4]]; r[k + 'Name'] = a[6]; };

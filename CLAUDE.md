@@ -40,15 +40,17 @@ commit finished work straight to `main`; there is no build step.
   coast, shaded relief), detail layers fade at their edges; `geo.credits` replaces the default credit line.
 - Flights, typed by each traveler: "Add your flights" beside "Add to calendar" (`assets/flights.js`: From/To picked from
   `assets/airports.js`, 3,244 airports with scheduled service from OurAirports, loaded when the sheet opens; date, times,
-  flight no. optional). No file reading any more (ticket upload was removed 12.10.2026). Rows are kept in
+  flight no. optional; times as hour / minute / AM-PM wheels (selects), stored 24-hour, shown AM/PM in English and 24-hour
+  in Hebrew). No file reading any more (ticket upload was removed 12.10.2026). Rows are kept in
   `mw-tour-<slug>-flights` with each airport's code, city and lonlat, synced to the traveler's own account; private: the
   admin's view-as does not show them. The Flights block is empty until the traveler adds flights.
   Each flight has a small pencil that opens the sheet on that row.
   Flights shape the map (`withTickets`, rebuilt from `RAW` + `buildMap()` on save): each flight becomes a flight line
   between its airports (new airport places `u-<code>`), and the group's own flight lines are dropped on the days of the
-  traveler's way out (dates up to the first day) or back (from the last day). A flight on a trip day goes on that day
-  (before the day's route on the way out, after it on the way back); flights before the first day go on day 0 (added
-  as "Departure" when the trip has none); flights after the last day add a day each ("Flight" tag).
+  traveler's way out (dates up to the first day) or back (from the last day), with the airports only those flights used
+  (Tel Aviv, a stopover; the airport where the group meets the trip stays). A flight on a trip day goes on that day
+  (before the day's route on the way out, after it on the way back); every other date gets its own day, before the trip
+  (numbered below the first day, so day numbers can be 0 or negative: `INTRO = -999` marks "no day chosen") or after it.
   Every tour map has `../assets/world-base.webp` (Blue Marble, whole world) as its first image, so far-away origins show land.
   Saved flights carry `by` (the member id) and `v: 3` (typed flights; earlier saves are ignored); only that traveler sees them. `members.js` keeps one owner per browser
   (`mw-tour-<slug>-owner`): when a different traveler signs in there, the lists/field/flights on it are cleared first.

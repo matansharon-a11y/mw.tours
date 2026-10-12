@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><link rel="icon" href="../assets/favicon.ico" sizes="32x32"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png"><script src="../assets/viewas.js?v=202610120844"></script><script src="../assets/members.js?v=202610120844" defer></script><script src="../assets/flights.js?v=202610120844" defer></script><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><link rel="icon" href="../assets/favicon.ico" sizes="32x32"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png"><script src="../assets/viewas.js?v=202610121213"></script><script src="../assets/members.js?v=202610121213" defer></script><script src="../assets/flights.js?v=202610121213" defer></script><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>השונר האיברי</title>
 <link rel="stylesheet" href="../assets/fonts.css?v=202610111325">
 <style>
@@ -1027,7 +1027,21 @@ function withTickets(t) {
   // their own flights replace the group's: no group flight line on the days of their way out or back
   const outbound = rows.some(r => r.iso <= first.date), inbound = rows.some(r => r.iso >= last.date);
   const groupFlight = id => t.legs[id] && t.legs[id].type === 'flight';
-  for (const d of t.days) if ((outbound && d.date <= first.date) || (inbound && d.date >= last.date)) for (const st of d.steps || []) if (st.legs) st.legs = st.legs.filter(id => !groupFlight(id));
+  const gone = new Set(), goneOut = new Set(), goneIn = new Set();
+  for (const d of t.days) {
+    const isOut = outbound && d.date <= first.date, isIn = inbound && d.date >= last.date; if (!isOut && !isIn) continue;
+    for (const st of d.steps || []) if (st.legs) st.legs = st.legs.filter(id => { const g = groupFlight(id); if (g) { gone.add(id); (isOut ? goneOut : goneIn).add(id); } return !g; });
+  }
+  if (gone.size) {
+    // and the group's airports that only those flights used (Tel Aviv, a stopover) leave the map; the airport where
+    // the group's flights reach the trip, and where they leave it, stay
+    const L = id => t.legs[id], O = [...goneOut].map(L), I = [...goneIn].map(L);
+    const ends = new Set(O.filter(l => !O.some(m => m.from === l.to)).map(l => l.to).concat(I.filter(l => !I.some(m => m.to === l.from)).map(l => l.from)));
+    const used = new Set(Object.entries(t.legs).filter(([id]) => !gone.has(id)).flatMap(([, l]) => [l.from, l.to]));
+    for (const l of [...O, ...I]) for (const pid of [l.from, l.to]) if (!used.has(pid) && !ends.has(pid)) delete t.places[pid];
+    gone.forEach(id => { delete t.legs[id]; });
+    for (const st of (t.opening && t.opening.steps) || []) { if (st.legs) st.legs = st.legs.filter(id => !gone.has(id)); if (st.set) st.set = st.set.filter(id => !gone.has(id)); }
+  }
   // the traveler's own airports (the expedition's own when it already has that one) and a flight line for each flight
   const placeFor = (code, ll, city) => {
     let id = Object.keys(t.places).find(k => t.places[k].code === code);
@@ -1048,18 +1062,12 @@ function withTickets(t) {
   });
   // which day each flight belongs to: flights before the first day go on day 0 (added as a departure day when the
   // trip has none), flights after the last day get a day each, the rest go on their own date
-  const added = {}, pre = rows.filter(r => r.iso < first.date);
-  let dep = null;
-  if (pre.length) {
-    if (first.n >= 1) {
-      dep = { n: 0, date: pre[0].iso, sun: first.sun, look: [], steps: [],
-        he: { label: 'יום היציאה', title: 'יוצאים לדרך', text: 'יום הטיסה שלך אל המסע.', stay: '' },
-        en: { label: 'Departure', title: 'Setting off', text: 'Your flight day to the expedition.', stay: '' } };
-      t.days.push(dep);
-    } else dep = first;
-  }
+  const added = {}, pre = [...new Set(rows.filter(r => r.iso < first.date).map(r => r.iso))].sort().reverse();
+  pre.forEach((iso, i) => { t.days.push(added[iso] = { n: first.n - 1 - i, date: iso, home: true, sun: first.sun, look: [], steps: [], pre: true,
+    he: { label: 'הטיסה שלך', title: 'בדרך למסע', text: 'יום הטיסה שלך אל המסע.', stay: '', tag: 'טיסה' },
+    en: { label: 'Your flight', title: 'On the way', text: 'Your flight day to the expedition.', stay: '', tag: 'Flight' } }); });
   for (const r of rows) {
-    let d = r.iso < first.date ? dep : t.days.find(x => x.date === r.iso);
+    let d = t.days.find(x => x.date === r.iso);
     if (!d) {
       if (r.iso < last.date) continue;   // a gap inside the trip: nothing to hang it on
       d = added[r.iso] = added[r.iso] || { n: 0, date: r.iso, home: true, sun: last.sun, look: [], steps: [],
@@ -1068,7 +1076,7 @@ function withTickets(t) {
     }
     (d.mine = d.mine || []).push(r.iso === d.date ? r : { ...r, other: r.iso });
   }
-  Object.values(added).sort((a, b) => a.date.localeCompare(b.date)).forEach((d, i) => { d.n = last.n + 1 + i; t.days.push(d); });
+  Object.values(added).filter(d => !d.pre).sort((a, b) => a.date.localeCompare(b.date)).forEach((d, i) => { d.n = last.n + 1 + i; t.days.push(d); });
   // the map follows the flights: on the way out they come before the day's own route, on the way back after it
   for (const d of t.days) {
     if (!d.mine) continue;
@@ -1078,7 +1086,8 @@ function withTickets(t) {
   t.days.sort((a, b) => a.n - b.n);
   return t;
 }
-const flightText = r => [r.other ? `${r.other.slice(8, 10)}.${r.other.slice(5, 7)}` : '', r.flight, r.from && r.to ? `${r.from} → ${r.to}` : '', r.time ? r.time + (r.arrive ? '–' + r.arrive : '') : ''].filter(Boolean).join(' · ');
+const clock = v => { const m = String(v || '').match(/^(\d\d):(\d\d)$/); if (!m || lang !== 'en') return v || ''; const H = +m[1]; return `${H % 12 || 12}:${m[2]} ${H < 12 ? 'AM' : 'PM'}`; };
+const flightText = r => [r.other ? `${r.other.slice(8, 10)}.${r.other.slice(5, 7)}` : '', r.flight, r.from && r.to ? `${r.from} → ${r.to}` : '', r.time ? clock(r.time) + (r.arrive ? '–' + clock(r.arrive) : '') : ''].filter(Boolean).join(' · ');
 const myFlightsHTML = d => d.mine ? d.mine.map(r => `<p class="myfl">${ic('plane')}<span><b>${esc(L.i.myFl)}</b> <bdi dir="ltr">${esc(flightText(r))}</bdi></span></p>`).join('') : '';
 function spreadDays(t) {
   const frame = d => d.steps && d.steps.length === 1 && !(d.steps[0].legs || []).length && d.steps[0].bbox ? d.steps[0].bbox.join() : null;
@@ -1133,7 +1142,8 @@ const mapEl = $('#map'), svg = $('#mapsvg'), ov = $('#ov'), pop = $('#pop'), doc
 mapEl.addEventListener('scroll', () => { mapEl.scrollTop = 0; mapEl.scrollLeft = 0; });
 let W = 1, H = 1, view = { x: 0, y: 0, s: 1 };
 let groups = null, legs = {}, overlay = [], veh = null, worldClu = null;
-let current = -1, playing = false, seq = 0, anim = 0, journeyOn = false, cardOpen = true;
+const INTRO = -999;   // no day chosen: the trip's own card (days can also be numbered below 0)
+let current = INTRO, playing = false, seq = 0, anim = 0, journeyOn = false, cardOpen = true;
 let filter = 'all', storyFilter = 'all', popState = null;
 const span = () => W / view.s / DEG;
 const ppdNow = () => view.s * DEG;
@@ -1840,7 +1850,7 @@ function endJourney(flyHome) {
   settleLegs(-1); veh.x = NaN;
   atmos({ night: 0, dawn: 0, stars: 0 }, 1200);
   tiltTo(0, flyHome ? 1200 : 400);
-  current = -1; cardOpen = true; markTimeline(); renderCard('in'); markStops();
+  current = INTRO; cardOpen = true; markTimeline(); renderCard('in'); markStops();
   setTimeout(() => { if (!journeyOn) { $('#journey').hidden = true; $('#jcap').className = 'jc'; } }, 900);
   if (flyHome) fly(fit(regionView()), { slow: 1 });
 }
@@ -1937,7 +1947,7 @@ function markTimeline() {
   const nav = $$('#timeline .tl-nav'); if (nav.length) { nav[0].disabled = current <= D0(); nav[1].disabled = current >= D1(); }
   $$('#timeline .tl-day').forEach(b => {
     const n = +b.dataset.day, on = n === current;
-    b.setAttribute('aria-selected', on); b.classList.toggle('done', current >= 0 && n < current);
+    b.setAttribute('aria-selected', on); b.classList.toggle('done', current !== INTRO && n < current);
     if (on) b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduce ? 'auto' : 'smooth' });
   });
 }
@@ -1947,7 +1957,7 @@ function renderCard(anim) {
   if (!cardOpen) { card.hidden = true; return; }
   card.hidden = false;
   let html, cls = 'daycard';
-  if (current < 0) {
+  if (current === INTRO) {
     const title = T.title[lang];
     cls += ' intro';
     html = `<div class="ctl"><button type="button" data-cardclose aria-label="${L.close}">${ic('x')}</button></div><div class="c">
@@ -1998,7 +2008,7 @@ function dayExtras(d) {
 // jump into a room and bring one part of it into view: 'stories', 'info:blk-flights', 'field:fa-rhino,fa-tiger'
 function goto(where) {
   const [room, ids] = where.split(':');
-  if (tab === 'route') { backDay = cardOpen && current >= 0 ? current : -1; backRoom = null; }
+  if (tab === 'route') { backDay = cardOpen && current !== INTRO ? current : INTRO; backRoom = null; }
   setTab(room);
   if (!ids) return;
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -2029,7 +2039,7 @@ dock.addEventListener('click', e => {
   card.addEventListener('pointerup', e => {
     if (!on) return; on = false;
     const dx = e.clientX - sx, dy = e.clientY - sy;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5 || current < 0) return;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5 || current === INTRO) return;
     const fwd = lang === 'he' ? dx > 0 : dx < 0;
     const n = clamp(current + (fwd ? 1 : -1), D0(), D1());
     if (n !== current) { setPlaying(false); goDay(n); }
@@ -2217,7 +2227,7 @@ function cleanTickets() {
 }
 function flightRows() {
   const mine = myTickets();
-  if (mine) return mine.map((r, n) => ({ own: n, date: r.iso ? `${r.iso.slice(8, 10)}.${r.iso.slice(5, 7)}` : '', time: r.time || '', from: r.from || '', to: r.to || '', flight: r.flight || '', arrive: r.arrive || '' }));
+  if (mine) return mine.map((r, n) => ({ own: n, date: r.iso ? `${r.iso.slice(8, 10)}.${r.iso.slice(5, 7)}` : '', time: clock(r.time), from: r.from || '', to: r.to || '', flight: r.flight || '', arrive: clock(r.arrive) }));
   return [];   // nothing until the traveler adds their own ticket
 }
 async function addTickets(edit) {
@@ -2225,7 +2235,7 @@ async function addTickets(edit) {
   const rows = await MWFlights.open({ rows: myTickets() || [], focus: edit });
   if (!rows) return;
   const by = meId(); store.set(FLKEY, JSON.stringify(rows.map(r => ({ ...r, by, v: 3 }))));
-  T = buildTrip(); if (current >= 0 && !T.days.some(d => d.n === current)) current = -1;
+  T = buildTrip(); if (current !== INTRO && !T.days.some(d => d.n === current)) current = INTRO;
   buildMap(); renderAll(); toast(rows.length ? L.i.ticketSaved : L.i.ticketGone, 'plane');
 }
 function renderInfo() {
@@ -2348,7 +2358,7 @@ $('#info').addEventListener('click', e => {
   const fe = e.target.closest('[data-fledit]'); if (fe) { addTickets(+fe.dataset.fledit); return; }
   const j = e.target.closest('[data-jump]'); if (j) { goto('info:' + j.dataset.jump); return; }
   const d = e.target.closest('[data-dayrow]'); if (d) { const w = d.closest('.dday'), on = !w.classList.contains('open'); w.classList.toggle('open', on); d.setAttribute('aria-expanded', on); return; }
-  const dm = e.target.closest('[data-daymap]'); if (dm) { backDay = -1; backRoom = { tab: 'info', day: +dm.dataset.daymap }; setTab('route'); setPlaying(false); goDay(+dm.dataset.daymap); return; }
+  const dm = e.target.closest('[data-daymap]'); if (dm) { backDay = INTRO; backRoom = { tab: 'info', day: +dm.dataset.daymap }; setTab('route'); setPlaying(false); goDay(+dm.dataset.daymap); return; }
 });
 function weatherSVG(wx) {
   // a range like −4–0°, kept left to right (and with a real minus) in Hebrew too
@@ -2418,13 +2428,13 @@ function setTab(name, opts = {}) {
   ROOMS.forEach(r => { $('#' + r).hidden = r !== name; });
   if (name !== 'route') { setPlaying(false); closePop(); if (journeyOn) { seq++; endJourney(false); } }
   if (changed && name !== 'route' && !reduce) { const el = $('#' + name); el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); el.scrollTop = 0; }
-  if (name === 'route') backDay = -1;
+  if (name === 'route') backDay = INTRO;
   renderBack();
   if (opts.hist !== false && (changed || !fromPop)) hist(changed && !fromPop && opts.push !== false, { tab: name });
 }
-$('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { if (b.dataset.tab !== tab) { backDay = -1; backRoom = null; } setTab(b.dataset.tab); } });
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { if (b.dataset.tab !== tab) { backDay = INTRO; backRoom = null; } setTab(b.dataset.tab); } });
 // a way home from every room: back to the map, and to the day you came from
-let backDay = -1, backRoom = null;   // backRoom: the page you left for the map, e.g. the day-by-day schedule
+let backDay = INTRO, backRoom = null;   // backRoom: the page you left for the map, e.g. the day-by-day schedule
 function renderBack() {
   const b = $('#back'), off = tab === 'route' && !backRoom;
   b.hidden = off; document.body.classList.toggle('back-on-map', tab === 'route' && !off);
@@ -2440,7 +2450,7 @@ $('#back').addEventListener('click', () => {
   }
   const n = backDay;
   setTab('route');
-  if (n >= 0 && T.days.some(d => d.n === n)) { if (n !== current) goDay(n, false); else { cardOpen = true; renderCard('in'); } }
+  if (n !== INTRO && T.days.some(d => d.n === n)) { if (n !== current) goDay(n, false); else { cardOpen = true; renderCard('in'); } }
 });
 $('#tabs').addEventListener('keydown', e => {
   const d = { ArrowRight: lang === 'he' ? -1 : 1, ArrowLeft: lang === 'he' ? 1 : -1 }[e.key];
