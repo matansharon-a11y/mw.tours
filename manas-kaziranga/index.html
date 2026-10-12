@@ -1016,10 +1016,7 @@ function withTickets(t) {
   const gone = new Set(), goneOut = new Set(), goneIn = new Set();
   for (const d of t.days) {
     const isOut = outbound && d.date <= first.date, isIn = inbound && d.date >= last.date; if (!isOut && !isIn) continue;
-    const before = gone.size;
     for (const st of d.steps || []) if (st.legs) st.legs = st.legs.filter(id => { const g = groupFlight(id); if (g) { gone.add(id); (isOut ? goneOut : goneIn).add(id); } return !g; });
-    // a day that was only the group's flights is not this traveler's day any more: its text says so
-    if (gone.size > before && !(d.steps || []).some(st => (st.legs || []).length)) d.notMine = true;
   }
   if (gone.size) {
     // and the group's airports that only those flights used (Tel Aviv, a stopover) leave the map; the airport where
@@ -1066,16 +1063,11 @@ function withTickets(t) {
     (d.mine = d.mine || []).push(r.iso === d.date ? r : { ...r, other: r.iso });
   }
   Object.values(added).filter(d => !d.pre).sort((a, b) => a.date.localeCompare(b.date)).forEach((d, i) => { d.n = last.n + 1 + i; t.days.push(d); });
-  // the day-by-day follows the flights too: a flight day tells its flights, and a day that was only the group's
-  // flights says the traveler's own flights are on their own days
+  // the day-by-day follows the flights too: a day of the traveler's own flights tells them; the expedition's own days
+  // keep all their text, and the traveler's flights on them are shown as extra lines
   const say = (rs, l) => rs.map(r => [r.flight, `${(l === 'he' ? r.fromCity : r.fromCity) || r.from} → ${r.toCity || r.to}`, r.time ? r.time + (r.arrive ? '–' + r.arrive : '') : ''].filter(Boolean).join(' · ')).join('. ') + '.';
   for (const d of t.days) {
     if (d.home && d.mine) { d.he.text = say(d.mine, 'he'); d.en.text = say(d.mine, 'en'); }
-    else if (d.notMine && !d.mine) {
-      d.he.title = 'יום הטיסה של הקבוצה'; d.en.title = "The group's flight day";
-      d.he.text = 'הטיסות של הקבוצה ביום הזה לא שלך: הטיסות שלך מופיעות בימים שלהן.';
-      d.en.text = "The group's flights on this day aren't yours: your own flights are on their own days.";
-    } else if (d.notMine && d.mine) { d.he.text = say(d.mine, 'he'); d.en.text = say(d.mine, 'en'); }
   }
   // the map follows the flights: on the way out they come before the day's own route, on the way back after it
   for (const d of t.days) {

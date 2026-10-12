@@ -59,7 +59,8 @@ commit finished work straight to `main`; there is no build step.
   (Tel Aviv, a stopover; the airport where the group meets the trip stays). A flight on a trip day goes on that day
   (before the day's route on the way out, after it on the way back); every other date gets its own day, before the trip
   (numbered below the first day, so day numbers can be 0 or negative: `INTRO = -999` marks "no day chosen") or after it.
-  The day-by-day follows too: flight days say their flights; a day that was only the group's flights says so.
+  The day-by-day follows too: the traveler's own flight days say their flights; the expedition's days keep all their
+  text, with the traveler's flights on them as extra lines.
   Every tour map has `../assets/world-base.webp` (Blue Marble, whole world) as its first image, so far-away origins show land.
   Saved flights carry `by` (the member id) and `v: 3` (typed flights; earlier saves are ignored); only that traveler sees them. `members.js` keeps one owner per browser
   (`mw-tour-<slug>-owner`): when a different traveler signs in there, the lists/field/flights on it are cleared first.
