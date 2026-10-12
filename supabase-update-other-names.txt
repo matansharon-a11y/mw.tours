@@ -1,0 +1,108 @@
+-- =====================================================================
+-- MW Photo Tours · update: a traveler's name in more than one language
+-- In /admin each traveler can also have their name in another language (e.g. Hebrew next to English).
+-- They can sign in with any of them (first, middle or last name, as before).
+-- Run once: Supabase → SQL Editor → New query → paste all of this → Run. Safe to run more than once.
+-- =====================================================================
+
+-- 1. the other names
+alter table public.tour_travelers add column if not exists other_names text[] not null default '{}';
+
+-- does a typed name fit this traveler (their main name or one of the others)?
+create or replace function public.name_fits(p_typed text, p_name text, p_other text[]) returns boolean
+language sql immutable set search_path = public as $$
+  select public.name_words(p_typed) <@ public.name_words(p_name)
+      or exists (select 1 from unnest(coalesce(p_other, '{}'::text[])) o where public.name_words(p_typed) <@ public.name_words(o))
+$$;
+
+-- 2. joining: the same as before, now checking every name of a traveler
+create or replace function public.join_tour(p_slug text, p_code text, p_name text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare t public.tours; v_member uuid; v_name text; v_state jsonb; v_trav uuid; v_full text; v_n int;
+begin
+  if auth.uid() is null then raise exception 'no_session'; end if;
+  if (select count(*) from public.join_attempts where user_id = auth.uid() and at > now() - interval '15 minutes') >= 10 then
+    return json_build_object('error', 'too_many_attempts');
+  end if;
+  select * into t from public.tours where slug = p_slug;
+  if not found or t.join_code_hash is null then return json_build_object('error', 'tour_not_ready'); end if;
+  if extensions.crypt(public.norm_code(p_code), t.join_code_hash) <> t.join_code_hash then
+    insert into public.join_attempts (user_id) values (auth.uid());
+    return json_build_object('error', 'wrong_code');
+  end if;
+  v_name := regexp_replace(btrim(coalesce(p_name, '')), '\s+', ' ', 'g');
+  if char_length(v_name) < 1 or char_length(v_name) > 60 or cardinality(public.name_words(v_name)) = 0 then
+    return json_build_object('error', 'bad_name');
+  end if;
+
+  -- only names Matan put on the list can join; every word typed must be one of the words of one of their names
+  select count(*), min(id::text)::uuid into v_n, v_trav from public.tour_travelers
+   where tour_slug = p_slug and public.name_fits(v_name, name, other_names);
+  if v_n = 0 then
+    insert into public.join_attempts (user_id) values (auth.uid());
+    return json_build_object('error', 'name_not_listed');
+  end if;
+  if v_n > 1 then return json_build_object('error', 'name_ambiguous'); end if;
+  select name into v_full from public.tour_travelers where id = v_trav;
+  select id into v_member from public.members where tour_slug = p_slug and traveler_id = v_trav limit 1;
+  if v_member is null then
+    insert into public.members (tour_slug, name, name_key, traveler_id) values (p_slug, v_full, lower(v_full), v_trav)
+    on conflict (tour_slug, name_key) do update set traveler_id = excluded.traveler_id, last_seen = now(), visits = public.members.visits + 1
+    returning id into v_member;
+  else
+    update public.members set last_seen = now(), visits = visits + 1 where id = v_member;
+  end if;
+
+  insert into public.member_devices (user_id, member_id) values (auth.uid(), v_member) on conflict do nothing;
+  insert into public.progress (member_id) values (v_member) on conflict do nothing;
+  select state into v_state from public.progress where member_id = v_member;
+  select name into v_name from public.members where id = v_member;
+  return json_build_object('member_id', v_member, 'name', v_name, 'secret', t.content_secret, 'state', v_state);
+end $$;
+
+-- 3. admin: add one traveler with their other names, or set a traveler's other names
+create or replace function public.admin_add_traveler(p_slug text, p_name text, p_other text[]) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare n text; v_id uuid; o text[];
+begin
+  if not public.is_tour_admin() then raise exception 'not_admin'; end if;
+  if not exists (select 1 from public.tours where slug = p_slug) then raise exception 'tour_not_connected'; end if;
+  n := regexp_replace(btrim(coalesce(p_name, '')), '\s+', ' ', 'g');
+  if char_length(n) < 1 or char_length(n) > 60 then raise exception 'bad_name'; end if;
+  select coalesce(array_agg(x), '{}') into o from (select regexp_replace(btrim(x), '\s+', ' ', 'g') x from unnest(coalesce(p_other, '{}'::text[])) x) s where char_length(x) between 1 and 60;
+  insert into public.tour_travelers (tour_slug, name, name_key, other_names) values (p_slug, n, lower(n), o)
+  on conflict (tour_slug, name_key) do update set other_names = excluded.other_names
+  returning id into v_id;
+  return v_id;
+end $$;
+
+create or replace function public.admin_set_other_names(p_id uuid, p_other text[]) returns void
+language plpgsql security definer set search_path = public as $$
+declare o text[];
+begin
+  if not public.is_tour_admin() then raise exception 'not_admin'; end if;
+  select coalesce(array_agg(x), '{}') into o from (select regexp_replace(btrim(x), '\s+', ' ', 'g') x from unnest(coalesce(p_other, '{}'::text[])) x) s where char_length(x) between 1 and 60;
+  update public.tour_travelers set other_names = o where id = p_id;
+end $$;
+
+-- 4. the admin page gets everything: the code, the list (with other names) and who joined
+create or replace function public.admin_overview() returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  if not public.is_tour_admin() then raise exception 'not_admin'; end if;
+  return coalesce((
+    select json_agg(json_build_object(
+      'slug', t.slug, 'title', t.title, 'ready', t.join_code_hash is not null and t.content_secret is not null, 'updated_at', t.updated_at,
+      'code', case when t.join_code_hash is not null and extensions.crypt(t.content_secret, t.join_code_hash) = t.join_code_hash then t.content_secret end,
+      'travelers', coalesce((select json_agg(json_build_object('id', r.id, 'name', r.name, 'other_names', r.other_names) order by lower(r.name))
+        from public.tour_travelers r where r.tour_slug = t.slug), '[]'::json),
+      'members', coalesce((select json_agg(json_build_object(
+          'id', m.id, 'name', m.name, 'traveler_id', m.traveler_id, 'joined', m.created_at, 'last_seen', m.last_seen, 'visits', m.visits,
+          'photos', (select count(*) from public.photos p where p.member_id = m.id)) order by m.last_seen desc)
+        from public.members m where m.tour_slug = t.slug), '[]'::json)
+    ) order by t.slug) from public.tours t), '[]'::json);
+end $$;
+
+revoke execute on function public.name_fits(text, text, text[]), public.admin_add_traveler(text, text, text[]), public.admin_set_other_names(uuid, text[]) from public, anon;
+grant execute on function public.admin_add_traveler(text, text, text[]), public.admin_set_other_names(uuid, text[]) to authenticated;
+grant execute on function public.admin_overview() to authenticated;

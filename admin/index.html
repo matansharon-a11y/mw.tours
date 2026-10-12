@@ -76,6 +76,9 @@ textarea:focus{outline:none;border-color:var(--gold)}
 .plus svg{width:18px;height:18px;fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round}
 .add{display:flex;gap:10px;align-items:center}
 .add input{height:40px;flex:1;min-width:0}
+@media (max-width:640px){.add{flex-wrap:wrap}.add input{flex:1 1 100%}}
+.alt{display:block;margin-top:3px;font-size:12.5px;color:var(--faint,#888)}
+.lnk{border:0;background:none;padding:0;color:var(--gold,#F4AF56);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .who{color:var(--paper);font-weight:700;text-decoration:underline;text-decoration-color:rgba(244,175,86,.6);text-underline-offset:3px}
 .who:hover{color:var(--gold)}
 .st{font:600 10.5px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
@@ -209,9 +212,9 @@ function render(photos) {
       <p class="msg" data-msg role="status"></p>
 
       <div class="trh"><h3>Travelers · ${trav.length}</h3>${ready ? `<button class="plus" type="button" data-plus aria-label="Add a traveler" title="Add a traveler"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg></button>` : ''}</div>
-      ${ready ? `<form class="add" data-addform ${openAdd === t.slug ? '' : 'hidden'}><input data-names type="text" placeholder="Full name" autocomplete="off" spellcheck="false" aria-label="Traveler's full name"><button class="btn small" type="submit">Add</button></form>` : ''}
+      ${ready ? `<form class="add" data-addform ${openAdd === t.slug ? '' : 'hidden'}><input data-names type="text" placeholder="Full name (English)" autocomplete="off" spellcheck="false" aria-label="Traveler's full name"><input data-other type="text" dir="auto" placeholder="Name in another language (optional)" autocomplete="off" spellcheck="false" aria-label="The same name in another language"><button class="btn small" type="submit">Add</button></form>` : ''}
       ${rows.length ? `<div class="tbl"><table><thead><tr><th>Name</th><th>Status</th><th>Last active</th><th>Photos</th><th></th></tr></thead><tbody>
-        ${rows.map(x => `<tr><td><a class="who" href="../${esc(t.path)}?as=${esc(x.m ? x.m.id : x.t.id)}" target="_blank" rel="noopener" title="Open ${esc(x.name)}'s view">${esc(x.name)}</a></td>
+        ${rows.map(x => `<tr><td><a class="who" href="../${esc(t.path)}?as=${esc(x.m ? x.m.id : x.t.id)}" target="_blank" rel="noopener" title="Open ${esc(x.name)}'s view">${esc(x.name)}</a>${x.t ? `<span class="alt">${(x.t.other_names || []).length ? `<bdi>${esc(x.t.other_names.join(' · '))}</bdi> ` : ''}<button type="button" class="lnk" data-alias="${esc(x.t.id)}" data-name="${esc(x.name)}" data-cur="${esc((x.t.other_names || []).join(', '))}">${(x.t.other_names || []).length ? 'edit' : '+ other language'}</button></span>` : ''}</td>
           <td><span class="st ${x.m ? (x.t ? 'in' : 'extra') : 'wait'}">${x.m ? (x.t ? 'Joined' : 'Not on list') : 'Not joined yet'}</span></td>
           <td>${x.m ? fmt(x.m.last_seen) : '–'}</td><td>${x.m ? x.m.photos : '–'}</td>
           <td><button class="btn danger small" type="button" ${x.t ? `data-rmt="${esc(x.t.id)}"` : `data-rm="${esc(x.m.id)}"`} data-name="${esc(x.name)}">Remove</button></td></tr>`).join('')}
@@ -251,6 +254,13 @@ $('#tours').addEventListener('click', async e => {
     if (!f.hidden) f.querySelector('input').focus();
     return;
   }
+  if (btn.matches('[data-alias]')) {
+    const v = prompt(`${btn.dataset.name} in another language (they can sign in with any of these names). Several: separate with commas. Empty: remove.`, btn.dataset.cur);
+    if (v == null) return;
+    const { error } = await sb.rpc('admin_set_other_names', { p_id: btn.dataset.alias, p_other: v.split(/[,;\n]+/).map(n => n.trim()).filter(Boolean) });
+    if (error) return say(msg, /function/.test(error.message) ? 'Run supabase-update-other-names.txt in Supabase first.' : 'Could not save: ' + error.message, 'err');
+    await load(); return;
+  }
   if (btn.matches('[data-rmt]')) {
     if (!confirm(`Remove ${btn.dataset.name} from this expedition's list? If they joined, their access, progress and photos go too.`)) return;
     const { error } = await sb.rpc('admin_remove_traveler', { p_id: btn.dataset.rmt });
@@ -276,10 +286,14 @@ $('#tours').addEventListener('click', async e => {
 $('#tours').addEventListener('submit', async e => {
   e.preventDefault();
   const f = e.target, card = f.closest('.card'), t = list[+card.dataset.i], msg = card.querySelector('[data-msg]');
+  const other = (f.querySelector('[data-other]') || {}).value || '';
   const names = f.querySelector('input').value.split(/[,;\n]+/).map(n => n.trim()).filter(Boolean);
   if (!names.length) return f.querySelector('input').focus();
   const b = f.querySelector('button'); b.disabled = true;
-  const { data, error } = await sb.rpc('admin_add_travelers', { p_slug: t.slug, p_names: names });
+  // with a name in another language: one traveler at a time; without: several names separated by commas
+  const { data, error } = other.trim()
+    ? await sb.rpc('admin_add_traveler', { p_slug: t.slug, p_name: names.join(' '), p_other: other.split(/[,;\n]+/).map(n => n.trim()).filter(Boolean) }).then(r => ({ data: r.data ? names.length : 0, error: r.error && /function/.test(r.error.message) ? { message: 'Run supabase-update-other-names.txt in Supabase first.' } : r.error }))
+    : await sb.rpc('admin_add_travelers', { p_slug: t.slug, p_names: names });
   b.disabled = false;
   if (error) return say(msg, /function/.test(error.message) ? 'Run supabase-update-travelers.txt in Supabase first.' : 'Could not add: ' + error.message, 'err');
   openAdd = t.slug; await load();
