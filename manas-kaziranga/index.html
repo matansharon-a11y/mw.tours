@@ -2255,8 +2255,8 @@ function renderInfo() {
   const val = v => esc(tx(v));
   const allChecks = T.essentials.flatMap(s => s.check || []), firstList = T.essentials.find(s => s.check);
   const qa = `<div class="qa" style="--i:3">
-      <button class="pill" type="button" data-jump="blk-days">${ic('calendar')}<span>${esc(I.days)}</span></button>
       <button class="pill" type="button" data-jump="blk-flights">${ic('plane')}<span>${esc(I.flights)}</span></button>
+      <button class="pill" type="button" data-jump="blk-days">${ic('calendar')}<span>${esc(I.days)}</span></button>
       ${firstList ? `<button class="pill" type="button" data-jump="ess-${firstList.id}">${ic('check')}<span>${esc(I.lists)} <small data-allcount>${allChecks.filter(it => checks[it.id]).length}/${allChecks.length}</small></span></button>` : ''}
       ${inViewer ? '' : `<button class="pill" type="button" data-ics>${ic('download')}<span>${esc(I.cal)}</span></button>`}</div>`;
   const today = todayDate();
@@ -2310,8 +2310,8 @@ function renderInfo() {
   $('#info').innerHTML = heroHTML('info', I.kicker, I.title, I.lede, qa) + `<div class="wrap">
     <div class="clocks" id="blk-time" style="--i:0"><div class="clock"><span>${esc(I.here)}</span><b id="clk-il">--:--</b></div><div class="clock"><span>${esc(I.there)}</span><b id="clk-as">--:--</b><small id="clk-diff"></small></div></div>
     <div class="facts" style="--i:1">${factsHTML()}</div>
-    <section class="block" id="blk-days" style="--i:2"><div class="bh"><span class="ring">${ic('calendar')}</span><h3>${esc(I.days)}</h3></div><div class="dlist">${days}</div></section>
-    <section class="block" id="blk-flights" style="--i:3"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${canTicket() ? esc(I.ticket) : I.flights}</h3>${canTicket() ? `<button class="rbtn plusb" type="button" data-ticket aria-label="${esc(I.ticket)}" title="${esc(I.ticket)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : ''}${inViewer ? '' : `<button class="rbtn" type="button" data-ics aria-label="${esc(I.cal)}" title="${esc(I.cal)}">${ic('calendar')}</button>`}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(window.MW_AS ? I.flPrivate : I.noFlights)}</p></div>`}</section>
+    <section class="block" id="blk-flights" style="--i:2"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${canTicket() ? esc(I.ticket) : I.flights}</h3>${canTicket() ? `<button class="rbtn plusb" type="button" data-ticket aria-label="${esc(I.ticket)}" title="${esc(I.ticket)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : ''}${inViewer ? '' : `<button class="rbtn" type="button" data-ics aria-label="${esc(I.cal)}" title="${esc(I.cal)}">${ic('calendar')}</button>`}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(window.MW_AS ? I.flPrivate : I.noFlights)}</p></div>`}</section>
+    <section class="block" id="blk-days" style="--i:3"><div class="bh"><span class="ring">${ic('calendar')}</span><h3>${esc(I.days)}</h3></div><div class="dlist">${days}</div></section>
     <section class="block" id="blk-stays" style="--i:4"><div class="bh"><span class="ring">${ic('bed')}</span><h3>${I.stays}</h3></div><div class="stays">${stays}</div></section>
     <section class="block" id="blk-weather" style="--i:5"><div class="bh"><span class="ring">${ic('sun')}</span><h3>${I.weather}</h3></div>
       <div class="wx">${weatherSVG(wx)}<p>${esc(wx[lang])}</p></div></section>

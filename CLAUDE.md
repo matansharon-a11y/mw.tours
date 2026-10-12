@@ -43,7 +43,8 @@ commit finished work straight to `main`; there is no build step.
   coast, shaded relief), detail layers fade at their edges; `geo.credits` replaces the default credit line.
 - Flights block header: "Add flights" / "הוספת טיסות" with a round + and a round calendar icon ("Add to
   calendar") side by side right after it (no per-tour title override). The top of Essentials has one "Flights" pill
-  (jumps to the block); adding happens only in the block.
+  (jumps to the block); adding happens only in the block. In Essentials the Flights block comes first, above the
+  Day by day (the pills follow the same order: Flights, Day by day).
 - Map pictures: only those on screen are drawn, and `world-base` only where the tour's own world map ends (`render()`).
   Keep each map picture at about 2000 px or less (big ones get dropped and redrawn on phones: flicker).
 - Flights, typed by each traveler: the + in the Flights block header (`assets/flights.js`: From/To picked from
