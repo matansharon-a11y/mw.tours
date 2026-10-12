@@ -1,0 +1,11 @@
+-- =====================================================================
+-- MW Photo Tours · check: who has flights saved (read only, changes nothing)
+-- Run: Supabase → SQL Editor → New query → paste → Run. Send a screenshot of the result.
+-- =====================================================================
+select m.tour_slug as expedition, m.name as traveler, m.id as traveler_id,
+       (select count(*) from public.member_devices d where d.member_id = m.id) as browsers,
+       p.updated_at as saved_at,
+       p.state->>'flights' as flights
+  from public.progress p join public.members m on m.id = p.member_id
+ where coalesce(p.state->>'flights', '[]') not in ('[]', '')
+ order by m.tour_slug, m.name;
