@@ -33,6 +33,8 @@ commit finished work straight to `main`; there is no build step.
 - Header photos (`heroes.<room>`): HD (about 2560 px wide), `focus`, optional `tall` (people photos),
   optional `phone` image + `phoneFocus` when the subject would sit under the title on a phone.
   Header words always sit like Manas: at the start side (left in English, right in Hebrew), never moved beside the subject.
+- Top bar on desktop (960 px+): `fitTop()` measures it and, only when the tabs would crowd the sides, steps down:
+  `tc1` name badge = initials, `tc2` countdown = plane icon (full text as tooltip), `tc3` tabs = icons (names as tooltips).
 - Facts row (Length, Group size…): round gold-edged icon rings, icon centred (`.fact .ring`; the text rule is `.fact>div>span`).
 - Leader role line: "Expedition leader, founder of MW Photo Tours" (`leader.role`), on every expedition.
 - Leader room: no "behind the scenes" photo/caption (`leader.band` is ignored); bio and story in one column.
