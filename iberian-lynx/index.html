@@ -1048,9 +1048,11 @@ const buildTrip = () => spreadDays(withTickets(markLast(personalize(structuredCl
 // the traveler's own flights shape their days: a flight on a trip day is shown on that day, and a flight before the
 // first day or after the last one adds a day of its own, so the dates on the map follow their ticket
 function withTickets(t) {
-  if (window.MW_AS) return t;   // flights are private, also from the admin's view
   let rows = [];
-  try { const a = JSON.parse(store.get('mw-tour-' + t.slug + '-flights') || 'null'), me = meId(); if (Array.isArray(a)) rows = a.filter(r => r && r.by === me && r.v === 3 && /^\d{4}-\d\d-\d\d$/.test(r.iso || '') && r.fromLL && r.toLL); } catch (e) {}
+  // the traveler's own typed flights (private, also from the admin's view) …
+  if (!window.MW_AS) try { const a = JSON.parse(store.get('mw-tour-' + t.slug + '-flights') || 'null'), me = meId(); if (Array.isArray(a)) rows = a.filter(r => r && r.by === me && r.v === 3 && /^\d{4}-\d\d-\d\d$/.test(r.iso || '') && r.fromLL && r.toLL); } catch (e) {}
+  // … and the flights Matan already has for them (vault personal patch "tickets", same shape), unless typed again
+  rows = rows.concat((t.tickets || []).filter(p => p.iso && p.fromLL && p.toLL && !rows.some(r => r.iso === p.iso && r.from === p.from && r.to === p.to)));
   if (!rows.length) return t;
   rows.sort((a, b) => (a.iso + (a.time || '')).localeCompare(b.iso + (b.time || '')));
   const first = t.days[0], last = t.days[t.days.length - 1];
@@ -2292,6 +2294,10 @@ function flightRows() {
   const isoOf = ddmm => { const d = T.days.find(x => x.date && `${x.date.slice(8, 10)}.${x.date.slice(5, 7)}` === ddmm); return d ? d.date : (T.start || '').slice(0, 4) + '-' + ddmm.slice(3, 5) + '-' + ddmm.slice(0, 2); };
   const t = v => typeof v === 'string' ? v : '';
   const mine = (myTickets() || []).map((r, n) => ({ own: n, iso: r.iso || '', at: t(r.time), date: r.iso ? `${r.iso.slice(8, 10)}.${r.iso.slice(5, 7)}` : '', time: clock(r.time), from: r.from || '', to: r.to || '', flight: r.flight || '', arrive: clock(r.arrive) }));
+  // flights Matan already has for this traveler (vault personal "tickets"): listed like their own, without the pencil
+  const preset = (T.tickets || []).filter(p => p.iso && !mine.some(m => m.iso === p.iso && m.from === p.from && m.to === p.to))
+    .map(r => ({ preset: true, iso: r.iso, at: t(r.time), date: `${r.iso.slice(8, 10)}.${r.iso.slice(5, 7)}`, time: clock(r.time), from: r.from || '', to: r.to || '', flight: r.flight || '', arrive: clock(r.arrive) }));
+  mine.push(...preset);
   const tour = ((T.flights && T.flights.rows) || []).filter(r => r.from && r.to && !r.bye)
     .map(r => ({ tour: true, iso: r.dep ? r.dep.slice(0, 10) : isoOf(r.date || ''), at: r.dep ? r.dep.slice(11, 16) : t(r.time), date: r.date || '', time: r.time || '', from: r.from, to: r.to, flight: r.flight || '', arrive: r.arrive || '', dep: r.dep, arr: r.arr }))
     .filter(g => !mine.some(m => m.iso === g.iso && m.from === g.from && m.to === g.to));   // the traveler typed the same flight in: one row
@@ -2405,7 +2411,7 @@ function downloadICS() {
     `SUMMARY:${icsEsc(`MW Photo Tours · ${title}`)}`, 'END:VEVENT'];
   const lt = (d, t) => `${d.replace(/-/g, '')}T${t.replace(':', '')}00`;   // a ticket's own local time
   // every flight in the Flights block: the tour's own (exact times) and the traveler's (their local times)
-  flightRows().map(r => r.own != null ? { ...myTickets()[r.own], local: true } : r).filter(r => r.local ? r.iso && r.time : r.dep).forEach((r, i) => {
+  flightRows().map(r => r.own != null ? { ...myTickets()[r.own], local: true } : r.preset ? { ...r, time: r.at, local: true } : r).filter(r => r.local ? r.iso && r.time : r.dep).forEach((r, i) => {
     lines.push('BEGIN:VEVENT', `UID:${T.slug}-flight-${i}@mw.photography`, `DTSTAMP:${stamp}`, `DTSTART:${r.local ? lt(r.iso, r.time) : z(r.dep)}`);
     if (r.arr && !r.local) lines.push(`DTEND:${z(r.arr)}`);
     lines.push(`SUMMARY:${icsEsc(r.cal ? tx(r.cal) : `${tx(r.flight)} · ${r.from} → ${r.to}${r.local && r.arrive ? ` · ${r.arrive}` : ''}`)}`, `DESCRIPTION:${icsEsc(`${L.i.calTitle}: ${title}`)}`);

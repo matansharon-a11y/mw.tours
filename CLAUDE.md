@@ -71,6 +71,10 @@ commit finished work straight to `main`; there is no build step.
   Each row: date + weekday, departure time with → arrival under it, route codes, flight no. as a pill (all in the one
   sans font); a missing time/flight no. shows "Time TBC" / "Flight no. TBC" (Manas GAU→DEL for travelers with no personal entry).
   No note under the flights (`flights.<lang>.note` is not shown): meeting points and terminals belong in the day-by-day text.
+  Flights Matan already has for a traveler: vault personal patch `tickets` (same shape as typed flights: from/to codes,
+  cities, LL, iso, time, arrive, flight). They act like the traveler's own (map, day-by-day, list, calendar) without the
+  pencil; a typed copy shows once. Only Manas uses this (EY 596 + EY 216 on 31.10 for both personal groups); every other
+  expedition, now and future, leaves it out: travelers add their own.
   Each flight has a small pencil that opens the sheet on that row.
   Flights shape the map (`withTickets`, rebuilt from `RAW` + `buildMap()` on save): each flight becomes a flight line
   between its airports (new airport places `u-<code>`), and the group's own flight lines are dropped on the days of the
