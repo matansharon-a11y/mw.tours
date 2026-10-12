@@ -439,6 +439,7 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
 .fl .r small{font:500 12px/1 var(--sans);letter-spacing:0;color:var(--faint)}
 .fl .no{font-size:13px;color:var(--gold-soft);text-align:end}
 .fl.pending{opacity:.6}
+.bye{display:flex;align-items:flex-start;gap:8px;margin:10px 0 0;font-size:14px;line-height:1.45;color:var(--paper)}.bye .ic{width:15px;height:15px;flex:none;margin-top:2px;color:var(--amber)}
 .myfl{display:flex;align-items:center;gap:8px;margin:8px 0 0;font-size:14px;color:var(--gold-soft)}.myfl .ic{width:15px;height:15px;flex:none;color:var(--amber)}.myfl b{font-weight:600;color:var(--paper)}
 .fl .no:has(.fled){display:flex;align-items:center;justify-content:flex-end;gap:10px}
 .fled{margin-inline-start:auto!important;display:grid;place-items:center;width:32px;height:32px;margin:-6px 0;padding:0;border:1px solid var(--rule);border-radius:50%;background:none;color:var(--faint);cursor:pointer;transition:color .2s,border-color .2s}
@@ -909,7 +910,7 @@ const UI = {
       morning: 'בבוקר', day: 'במהלך היום', yes: 'כלול', no: 'לא כלול', of: (a, b) => `${a}/${b}`, map: 'נתוני המפה',
       days: 'יום אחר יום', cal: 'הוספה ליומן', lists: 'רשימות הציוד', here: 'עכשיו בישראל', there: n => `עכשיו ב${n}`, ahead: h => `מקדים את ישראל ב-${h} שעות`, behind: h => h === '1' ? 'שעה אחת אחרי ישראל' : `${h} שעות אחרי ישראל`, same: 'אותה שעה כמו בישראל',
       install: { title: 'שמרו את המסע בטלפון', text: ['באייפון: כפתור השיתוף, ואז "הוספה למסך הבית".', 'באנדרואיד: התפריט, ואז "התקנת אפליקציה".', 'אחרי הפתיחה הראשונה העמוד עובד גם בלי קליטה.'] },
-      calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג', myFl: 'הטיסה שלך',
+      calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג', myFl: 'הטיסה שלך', bye: 'היום האחרון שלנו יחד. תודה שהייתם חלק מהמסע הזה. תיהנו מכל רגע אחרון, ודרך צלחה הביתה!',
       ticket: 'הוספת טיסות', ticketEdit: 'עריכת הטיסה', flPrivate: 'הטיסות של כל נוסע פרטיות: רק מי שהוסיף את הכרטיס רואה אותן.', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
       noFlights: 'הוסיפו את הטיסות שלכם, מהבית אל המסע ובחזרה, והמסלול שלכם יופיע גם על המפה. רק אתם רואים אותן.' },
     l: { kicker: 'המדריך שלכם', contact: 'דברו איתי', wa: 'וואטסאפ למתן', waText: 'היי מתן, לגבי המסע', phone: 'טלפון', mail: 'מייל', copy: 'העתקה', copied: 'הועתק', ig: 'אינסטגרם' },
@@ -944,7 +945,7 @@ const UI = {
       morning: 'Mornings', day: 'Daytime', yes: 'Included', no: 'Not included', of: (a, b) => `${a}/${b}`, map: 'Map data',
       days: 'Day by day', cal: 'Add to calendar', lists: 'Packing lists', here: 'Now in Israel', there: n => `Now in ${n}`, ahead: h => `${h} hours ahead of Israel`, behind: h => h === '1' ? 'One hour behind Israel' : `${h} hours behind Israel`, same: 'Same time as Israel',
       install: { title: 'Keep it on your phone', text: ['iPhone: the Share button, then "Add to Home Screen".', 'Android: the menu, then "Install app".', 'After the first visit the page works without signal too.'] },
-      calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion', myFl: 'Your flight',
+      calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion', myFl: 'Your flight', bye: 'Our last day together. Thank you for being part of this expedition. Enjoy every last moment, and safe travels home!',
       ticket: 'Add flights', ticketEdit: 'Edit this flight', flPrivate: 'Each traveler\'s flights are private: only the one who added the ticket sees them.', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
       noFlights: 'Add your flights, from home to the expedition and back, and your own route shows on the map too. Only you see them.' },
     l: { kicker: 'Your leader', contact: 'Get in touch', wa: 'WhatsApp Matan', waText: 'Hi Matan, about the expedition', phone: 'Phone', mail: 'Email', copy: 'Copy', copied: 'Copied', ig: 'Instagram' },
@@ -1021,7 +1022,8 @@ function personalize(t) {
 // days spent in the same place share one map frame; stepping through them would only zoom.
 // Spread such a run across the place, west to east, so every day visibly moves to its own part of it.
 let RAW = null;
-const buildTrip = () => spreadDays(withTickets(personalize(structuredClone(RAW))));
+const markLast = t => { const L = t.days.reduce((a, d) => d.n > a.n ? d : a); L.final = true; return t; };
+const buildTrip = () => spreadDays(withTickets(markLast(personalize(structuredClone(RAW)))));
 // the traveler's own flights shape their days: a flight on a trip day is shown on that day, and a flight before the
 // first day or after the last one adds a day of its own, so the dates on the map follow their ticket
 function withTickets(t) {
@@ -1102,6 +1104,7 @@ function withTickets(t) {
 }
 const clock = v => v || '';   // flight times stay 24-hour, e.g. 13:05
 const flightText = r => [r.other ? `${r.other.slice(8, 10)}.${r.other.slice(5, 7)}` : '', r.flight, r.from && r.to ? `${r.from} → ${r.to}` : '', r.time ? clock(r.time) + (r.arrive ? '–' + clock(r.arrive) : '') : ''].filter(Boolean).join(' · ');
+const byeHTML = d => d.final ? `<p class="bye">${ic('spark')}<span>${esc(L.i.bye)}</span></p>` : '';
 const myFlightsHTML = d => d.mine ? d.mine.map(r => `<p class="myfl">${ic('plane')}<span><b>${esc(L.i.myFl)}</b> <bdi dir="ltr">${esc(flightText(r))}</bdi></span></p>`).join('') : '';
 function spreadDays(t) {
   const frame = d => d.steps && d.steps.length === 1 && !(d.steps[0].legs || []).length && d.steps[0].bbox ? d.steps[0].bbox.join() : null;
@@ -1997,7 +2000,7 @@ function renderCard(anim) {
     const isToday = sun && d.date === todayDate(), cd = isToday ? sunCountdown(sun) : '', xtra = dayExtras(d);
     html = `<div class="ctl"><button type="button" data-cardclose aria-label="${L.close}">${ic('x')}</button></div>
       <div class="c"><div class="hd"><span class="dl">${esc(c.label)}</span><span class="dd">${esc(dateLabel(d.date))}</span></div>
-      <h3>${esc(c.title)}</h3><p>${esc(c.text)}</p>${myFlightsHTML(d)}
+      <h3>${esc(c.title)}</h3><p>${esc(c.text)}</p>${myFlightsHTML(d)}${byeHTML(d)}
       <div class="ft">${c.stay ? `<span>${ic('bed')}${esc(c.stay)}</span>` : ''}${sun ? `<span class="sun" title="${L.rise} / ${L.set}">${ic('rise')}${sun.rise}<span class="sr">${L.rise}</span> ${ic('set')}${sun.set}<span class="sr">${L.set}</span></span>` : ''}${cd ? `<span class="sunin">${ic('sun')}<span>${esc(cd)}</span></span>` : ''}</div>
       ${xtra ? `<div class="xtra">${xtra}</div>` : ''}
       ${n ? `<button class="more" type="button" data-stories="${d.sun}">${ic('pin')}${esc(L.storiesHere(n))}</button>` : ''}</div>`;
@@ -2284,7 +2287,7 @@ function renderInfo() {
       <button class="drow" type="button" data-dayrow="${d.n}" aria-expanded="${open}">
       <span class="n"><b>${d.home ? `${dd}.${m}` : pad2(d.n)}</b><small>${d.home ? esc(d[lang].tag || L.home) : `${dd}.${m}`}</small></span><span><span class="h">${esc(c.title)}</span><span class="p">${esc(c.text)}</span></span>${ic('next')}</button>
       <div class="dpanel"><div class="dpin">
-        ${schedHTML(c.text)}
+        ${schedHTML(c.text)}${byeHTML(d)}
         <div class="rows">
           ${row(S.date, esc(dateLabel(d.date)))}
           ${d.mine ? row(L.i.myFl, d.mine.map(r => `<bdi dir="ltr">${esc(flightText(r))}</bdi>`).join('<br>')) : ''}
