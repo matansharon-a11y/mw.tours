@@ -420,6 +420,11 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
 .feet .ic.off{opacity:.3}
 .block{display:grid;gap:22px}
 .bh{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px}
+.rbtn{flex:none;display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:1px solid rgba(254,251,241,.32);background:none;color:var(--paper);cursor:pointer;transition:border-color .2s,color .2s}
+.rbtn:hover,.rbtn:focus-visible{border-color:var(--gold);color:var(--gold)}
+.rbtn .ic{width:19px;height:19px}
+.rbtn.plusb{border-color:rgba(244,175,86,.6);color:var(--gold)}
+.rbtn.plusb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
 .flights.empty p{margin:0;padding-block:18px;color:var(--faint);font-size:15px;line-height:1.6}
 .bh h3{margin:0;font-size:24px;font-weight:700}
 .bh .n{margin-inline-start:auto;font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
@@ -881,7 +886,7 @@ const UI = {
       days: 'יום אחר יום', cal: 'הוספה ליומן', lists: 'רשימות הציוד', here: 'עכשיו בישראל', there: 'עכשיו באסאם', ahead: h => `מקדים את ישראל ב-${h} שעות`,
       install: { title: 'שמרו את המסע בטלפון', text: ['באייפון: כפתור השיתוף, ואז "הוספה למסך הבית".', 'באנדרואיד: התפריט, ואז "התקנת אפליקציה".', 'אחרי הפתיחה הראשונה העמוד עובד גם בלי קליטה.'] },
       calTitle: 'מסע צילום', calDep: 'יציאה מנתב"ג', myFl: 'הטיסה שלך',
-      ticket: 'הוספת הטיסות שלי', ticketEdit: 'עריכת הטיסה', flPrivate: 'הטיסות של כל נוסע פרטיות: רק מי שהוסיף את הכרטיס רואה אותן.', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
+      ticket: 'הוספת טיסות', ticketEdit: 'עריכת הטיסה', flPrivate: 'הטיסות של כל נוסע פרטיות: רק מי שהוסיף את הכרטיס רואה אותן.', ticketSaved: 'הטיסות שלכם נשמרו.', ticketGone: 'הטיסות נמחקו.',
       noFlights: 'הוסיפו את הטיסות שלכם, מהבית אל המסע ובחזרה, והמסלול שלכם יופיע גם על המפה. רק אתם רואים אותן.' },
     l: { kicker: 'המדריך שלכם', contact: 'דברו איתי', wa: 'וואטסאפ למתן', waText: 'היי מתן, לגבי המסע לאסאם', phone: 'טלפון', mail: 'מייל', copy: 'העתקה', copied: 'הועתק', ig: 'אינסטגרם' },
     sched: { date: 'תאריך', stay: 'לינה', sun: 'זריחה / שקיעה', look: 'מה לחפש', ex: 'תרגיל צילום', map: 'להראות במפה' },
@@ -916,7 +921,7 @@ const UI = {
       days: 'Day by day', cal: 'Add to calendar', lists: 'Packing lists', here: 'Now in Israel', there: 'Now in Assam', ahead: h => `${h} hours ahead of Israel`,
       install: { title: 'Keep it on your phone', text: ['iPhone: the Share button, then "Add to Home Screen".', 'Android: the menu, then "Install app".', 'After the first visit the page works without signal too.'] },
       calTitle: 'Photo expedition', calDep: 'Departure from Ben Gurion', myFl: 'Your flight',
-      ticket: 'Add your flights', ticketEdit: 'Edit this flight', flPrivate: 'Each traveler\'s flights are private: only the one who added the ticket sees them.', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
+      ticket: 'Add flights', ticketEdit: 'Edit this flight', flPrivate: 'Each traveler\'s flights are private: only the one who added the ticket sees them.', ticketSaved: 'Your flights are saved.', ticketGone: 'Your flights were removed.',
       noFlights: 'Add your flights, from home to the expedition and back, and your own route shows on the map too. Only you see them.' },
     l: { kicker: 'Your leader', contact: 'Get in touch', wa: 'WhatsApp Matan', waText: 'Hi Matan, about the Assam expedition', phone: 'Phone', mail: 'Email', copy: 'Copy', copied: 'Copied', ig: 'Instagram' },
     sched: { date: 'Date', stay: 'Overnight', sun: 'Sunrise / sunset', look: 'Look for', ex: 'Photo exercise', map: 'Show on map' },
@@ -2297,7 +2302,7 @@ function renderInfo() {
     <div class="clocks" id="blk-time" style="--i:0"><div class="clock"><span>${esc(I.here)}</span><b id="clk-il">--:--</b></div><div class="clock"><span>${esc(I.there)}</span><b id="clk-as">--:--</b><small id="clk-diff"></small></div></div>
     <div class="facts" style="--i:1">${factsHTML()}</div>
     <section class="block" id="blk-days" style="--i:2"><div class="bh"><span class="ring">${ic('calendar')}</span><h3>${esc(I.days)}</h3></div><div class="dlist">${days}</div></section>
-    <section class="block" id="blk-flights" style="--i:3"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${I.flights}</h3>${inViewer ? '' : `<button class="btn small" type="button" data-ics style="margin-inline-start:auto">${ic('download')}<span>${esc(I.cal)}</span></button>`}${canTicket() ? `<button class="btn small" type="button" data-ticket>${ic('plane')}<span>${esc(I.ticket)}</span></button>` : ''}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(window.MW_AS ? I.flPrivate : I.noFlights)}</p></div>`}</section>
+    <section class="block" id="blk-flights" style="--i:3"><div class="bh"><span class="ring">${ic('plane')}</span><h3>${canTicket() ? esc(I.ticket) : I.flights}</h3>${canTicket() ? `<button class="rbtn plusb" type="button" data-ticket aria-label="${esc(I.ticket)}" title="${esc(I.ticket)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : ''}${inViewer ? '' : `<button class="rbtn" type="button" data-ics aria-label="${esc(I.cal)}" title="${esc(I.cal)}" style="margin-inline-start:auto">${ic('calendar')}</button>`}</div>${myRows.length ? `<div class="flights">${flights}</div>${myTickets() ? '' : `<p class="note">${esc(fl[lang].note)}</p>`}` : `<div class="flights empty"><p>${esc(window.MW_AS ? I.flPrivate : I.noFlights)}</p></div>`}</section>
     <section class="block" id="blk-stays" style="--i:4"><div class="bh"><span class="ring">${ic('bed')}</span><h3>${I.stays}</h3></div><div class="stays">${stays}</div></section>
     <section class="block" id="blk-weather" style="--i:5"><div class="bh"><span class="ring">${ic('sun')}</span><h3>${I.weather}</h3></div>
       <div class="wx">${weatherSVG(wx)}<p>${esc(wx[lang])}</p></div></section>
