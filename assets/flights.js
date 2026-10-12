@@ -69,7 +69,7 @@ const CSS = `
 .mwf .tpk{position:absolute;inset:0;z-index:5;display:grid;place-items:end center;padding:16px;background:rgba(5,5,4,.55)}
 .mwf .tpi{width:min(360px,100%);display:grid;gap:14px;padding:18px;border-radius:20px;background:#1B1814;border:1px solid rgba(254,251,241,.18);box-shadow:0 20px 60px rgba(0,0,0,.6);margin-bottom:8vh}
 .mwf .tpi b{font-size:15px;color:#FEFBF1}
-.mwf .wh{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;height:200px}
+.mwf .wh{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:6px;height:200px}
 .mwf .col{height:200px;overflow-y:auto;scroll-snap-type:y mandatory;padding:80px 0;box-sizing:border-box;scrollbar-width:none;-webkit-mask:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
 .mwf .col::-webkit-scrollbar{display:none}
 .mwf .it{height:40px;display:grid;place-items:center;scroll-snap-align:center;font:600 20px/1 inherit;font-family:inherit;color:#FEFBF1;font-variant-numeric:tabular-nums;cursor:pointer}
@@ -117,22 +117,21 @@ function open(opts = {}) {
       return `<label class="ap">${esc(w[k])}<input data-ap="${k}" type="text" dir="auto" placeholder="${esc(w.pick)}" value="${esc(code ? `${code}${city ? ' · ' + city : ''}` : '')}"${code && r[k + 'LL'] ? ' class="ok"' : ''}><small>${esc(r[k + 'Name'] || '')}</small></label>`;
     };
     const inp = (r, k, label, type, extra = '') => `<label class="${extra}">${esc(label)}<input data-k="${k}" type="${type}" dir="ltr" value="${esc(r[k] || '')}"></label>`;
-    // a time: one field; tapping it opens wheels for hour, minute and AM/PM. Kept as 24-hour "HH:MM".
-    const show12 = v => { const m = String(v || '').match(/^(\d\d):(\d\d)$/); if (!m) return '--:--'; const H = +m[1]; return `${H % 12 || 12}:${m[2]} ${H < 12 ? 'AM' : 'PM'}`; };
+    // a time: one field; tapping it opens wheels for hour (00–23) and minute. Kept as 24-hour "HH:MM".
+    const show12 = v => /^\d\d:\d\d$/.test(String(v || '')) ? v : '--:--';   // 24-hour, e.g. 13:05
     const timeField = (r, k, label) => `<div class="tm" data-t="${k}"><span>${esc(label)}</span><button type="button" class="tbtn${r[k] ? '' : ' empty'}" data-v="${esc(r[k] || '')}" dir="ltr">${esc(show12(r[k]))}</button></div>`;
     const pickTime = btn => {
       const IH = 40, cur = String(btn.dataset.v || '').match(/^(\d\d):(\d\d)$/);
-      let H = cur ? +cur[1] : 12, M = cur ? +cur[2] : 0;
-      const cols = [{ k: 'h', items: Array.from({ length: 12 }, (_, i) => String(i + 1)), at: (H % 12 || 12) - 1 },
-        { k: 'm', items: Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')), at: M },
-        { k: 'a', items: ['AM', 'PM'], at: H < 12 ? 0 : 1 }];
+      const H = cur ? +cur[1] : 12, M = cur ? +cur[2] : 0;
+      const cols = [{ k: 'h', items: Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')), at: H },
+        { k: 'm', items: Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')), at: M }];
       const pk = document.createElement('div'); pk.className = 'tpk';
       pk.innerHTML = `<div class="tpi"><b>${esc(btn.previousElementSibling.textContent)}</b><div class="wh" dir="ltr">${cols.map(c => `<div class="col" data-c="${c.k}">${c.items.map(x => `<div class="it">${x}</div>`).join('')}</div>`).join('')}<i class="band"></i></div>
         <div class="tb"><button type="button" class="b" data-tclear>${esc(w.clearT)}</button><span class="sp"></span><button type="button" class="b go" data-tok>${esc(w.done)}</button></div></div>`;
       v.appendChild(pk);
       const colEls = [...pk.querySelectorAll('.col')];
       colEls.forEach((el, n) => { el.scrollTop = cols[n].at * IH; el.addEventListener('click', e => { const it = e.target.closest('.it'); if (it) el.scrollTo({ top: [...el.children].indexOf(it) * IH, behavior: 'smooth' }); }); });
-      const val = () => { const [h, m, a] = colEls.map(el => Math.round(el.scrollTop / IH)); const h12 = h + 1; return `${String((h12 % 12) + (a ? 12 : 0)).padStart(2, '0')}:${String(m).padStart(2, '0')}`; };
+      const val = () => { const [h, m] = colEls.map(el => Math.round(el.scrollTop / IH)); return `${String(Math.min(23, h)).padStart(2, '0')}:${String(Math.min(59, m)).padStart(2, '0')}`; };
       const done = x => { if (x !== undefined) { btn.dataset.v = x; btn.textContent = show12(x); btn.classList.toggle('empty', !x); } pk.remove(); };
       pk.addEventListener('click', e => {
         if (e.target === pk) done();
