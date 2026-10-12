@@ -38,21 +38,22 @@ commit finished work straight to `main`; there is no build step.
   `tours.json` `cover: ""` shows an icon. Iceland (`iceland-2026`) is like that until Matan sends photos.
 - Map layers (`map/*.webp` + the `geo` block): Iceland's are drawn, not satellite (Natural Earth land/glaciers, geoBoundaries
   coast, shaded relief), detail layers fade at their edges; `geo.credits` replaces the default credit line.
-- Flight tickets: "Add your flight ticket" beside "Add to calendar" (`assets/tickets.js`, read in the browser: pdf.js for
-  PDFs, Tesseract OCR for JPG/PNG; nothing is uploaded). The traveler checks the rows, they are kept in
-  `mw-tour-<slug>-flights` (synced like the lists to the traveler's own account; private: the admin's view-as does not show them). The Flights block is empty until
-  then for everyone (also travelers with a `personal` entry; that only shapes their map days now).
-  Each added flight has a small pencil that opens the sheet on that row to edit it.
-  Flights also shape the map days (`withTickets`, rebuilt from `RAW` on save): a flight on a trip day shows on that day's
-  card; flights after the last day add a day each (date, "Flight" tag, frame on the departure airport's place by `code`);
-  flights before the first day go on day 0 (added as "Departure" when the trip has none).
-  Saved flights carry `by` (the member id) and `v: 2` (all earlier saves were cleared on 11.10.2026); only that traveler sees them. `members.js` keeps one owner per browser
+- Flights, typed by each traveler: "Add your flights" beside "Add to calendar" (`assets/flights.js`: From/To picked from
+  `assets/airports.js`, 3,244 airports with scheduled service from OurAirports, loaded when the sheet opens; date, times,
+  flight no. optional). No file reading any more (ticket upload was removed 12.10.2026). Rows are kept in
+  `mw-tour-<slug>-flights` with each airport's code, city and lonlat, synced to the traveler's own account; private: the
+  admin's view-as does not show them. The Flights block is empty until the traveler adds flights.
+  Each flight has a small pencil that opens the sheet on that row.
+  Flights shape the map (`withTickets`, rebuilt from `RAW` + `buildMap()` on save): each flight becomes a flight line
+  between its airports (new airport places `u-<code>`), and the group's own flight lines are dropped on the days of the
+  traveler's way out (dates up to the first day) or back (from the last day). A flight on a trip day goes on that day
+  (before the day's route on the way out, after it on the way back); flights before the first day go on day 0 (added
+  as "Departure" when the trip has none); flights after the last day add a day each ("Flight" tag).
+  Every tour map has `../assets/world-base.webp` (Blue Marble, whole world) as its first image, so far-away origins show land.
+  Saved flights carry `by` (the member id) and `v: 3` (typed flights; earlier saves are ignored); only that traveler sees them. `members.js` keeps one owner per browser
   (`mw-tour-<slug>-owner`): when a different traveler signs in there, the lists/field/flights on it are cleared first.
   Server side one browser = one traveler per expedition (`supabase-update-one-traveler-per-browser.txt`: trigger on
   member_devices), so a browser used for two names never saves into the other person's account.
-  A ticket with several travelers (a couple on one booking): the signed-in name is matched to a name on it (Mr/Ms …,
-  SURNAME/GIVEN MR; Sara/Sarah, Haim/Chaim count); when each traveler's part holds different flights, only theirs are
-  taken, otherwise the shared ones; the sheet says whose flights these are, or warns when the name is not on the ticket.
 
 ## Rules
 - Every expedition, now and future, has the same interface as Manas & Kaziranga (the reference): a UI change to
