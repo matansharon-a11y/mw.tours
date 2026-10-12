@@ -38,12 +38,12 @@ function search(list, q) {
 const W = {
   he: { title: 'הטיסות שלכם', intro: 'מלאו כל טיסה: מהבית אל המסע, ובחזרה. במ- ובאל הקלידו עיר, מדינה או קוד שדה תעופה, ובחרו מהרשימה.',
         from: 'מ-', to: 'אל', date: 'תאריך', dep: 'המראה', arr: 'נחיתה', no: 'מספר טיסה (לא חובה)', pick: 'עיר או שדה תעופה',
-        add: '+ טיסה', save: 'שמירה', cancel: 'ביטול', del: 'הסרה', clear: 'מחיקת כל הטיסות', clearQ: 'למחוק את כל הטיסות שלכם?',
+        clearT: 'ניקוי', done: 'אישור', add: '+ טיסה', save: 'שמירה', cancel: 'ביטול', del: 'הסרה', clear: 'מחיקת כל הטיסות', clearQ: 'למחוק את כל הטיסות שלכם?',
         need: 'בכל טיסה צריך תאריך, ושדה תעופה ב-מ- וב-אל מתוך הרשימה.', none: 'לא נמצא שדה תעופה. נסו שם עיר או קוד של שלוש אותיות.',
         loadErr: 'רשימת שדות התעופה לא נטענה. בדקו את החיבור ונסו שוב.', privacy: 'רק אתם רואים את הטיסות שלכם.' },
   en: { title: 'Your flights', intro: 'Add each flight, from home to the expedition and back. In From and To type a city, country or airport code, then pick from the list.',
         from: 'From', to: 'To', date: 'Date', dep: 'Departs', arr: 'Lands', no: 'Flight no. (optional)', pick: 'City or airport',
-        add: '+ Flight', save: 'Save', cancel: 'Cancel', del: 'Remove', clear: 'Delete all flights', clearQ: 'Delete all your flights?',
+        clearT: 'Clear', done: 'Done', add: '+ Flight', save: 'Save', cancel: 'Cancel', del: 'Remove', clear: 'Delete all flights', clearQ: 'Delete all your flights?',
         need: 'Each flight needs a date, and a From and To airport picked from the list.', none: 'No airport found. Try a city name or a three-letter code.',
         loadErr: "The airport list didn't load. Check your connection and try again.", privacy: 'Only you see your flights.' },
 };
@@ -63,9 +63,18 @@ const CSS = `
 .mwf .fr{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border-radius:16px;background:rgba(254,251,241,.04);border:1px solid rgba(254,251,241,.08)}
 .mwf .fr.on{border-color:rgba(244,175,86,.6)}
 .mwf .tm{display:grid;gap:4px;font-size:11.5px;color:rgba(244,244,244,.56)}
-.mwf .tm div{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:4px}
-.mwf select{-webkit-appearance:none;appearance:none;text-align-last:center;width:100%;min-width:0;height:40px;padding-inline:2px;border-radius:10px;border:1px solid rgba(254,251,241,.22);background:rgba(10,9,8,.5);color:#FEFBF1;font:600 14px/1 inherit;font-family:inherit;color-scheme:dark;text-align:center}
-.mwf select:focus{outline:none;border-color:#F4AF56}
+.mwf .tbtn{height:40px;border-radius:10px;border:1px solid rgba(254,251,241,.22);background:rgba(10,9,8,.5);color:#FEFBF1;font:600 15px/1 inherit;font-family:inherit;cursor:pointer;font-variant-numeric:tabular-nums}
+.mwf .tbtn.empty{color:rgba(244,244,244,.4)}
+.mwf .tbtn:focus{outline:none;border-color:#F4AF56}
+.mwf .tpk{position:absolute;inset:0;z-index:5;display:grid;place-items:end center;padding:16px;background:rgba(5,5,4,.55)}
+.mwf .tpi{width:min(360px,100%);display:grid;gap:14px;padding:18px;border-radius:20px;background:#1B1814;border:1px solid rgba(254,251,241,.18);box-shadow:0 20px 60px rgba(0,0,0,.6);margin-bottom:8vh}
+.mwf .tpi b{font-size:15px;color:#FEFBF1}
+.mwf .wh{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;height:200px}
+.mwf .col{height:200px;overflow-y:auto;scroll-snap-type:y mandatory;padding:80px 0;box-sizing:border-box;scrollbar-width:none;-webkit-mask:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+.mwf .col::-webkit-scrollbar{display:none}
+.mwf .it{height:40px;display:grid;place-items:center;scroll-snap-align:center;font:600 20px/1 inherit;font-family:inherit;color:#FEFBF1;font-variant-numeric:tabular-nums;cursor:pointer}
+.mwf .band{position:absolute;inset-inline:0;top:80px;height:40px;border-radius:10px;border:1px solid rgba(244,175,86,.55);background:rgba(244,175,86,.08);pointer-events:none}
+.mwf .tb{display:flex;gap:8px}.mwf .tb .sp{flex:1}
 .mwf label{position:relative;display:grid;gap:4px;font-size:11.5px;color:rgba(244,244,244,.56)}
 .mwf input{width:100%;min-width:0;height:40px;padding-inline:10px;border-radius:10px;border:1px solid rgba(254,251,241,.22);background:rgba(10,9,8,.5);color:#FEFBF1;font:600 14px/1 inherit;font-family:inherit;color-scheme:dark}
 .mwf input:focus{outline:none;border-color:#F4AF56}
@@ -108,20 +117,28 @@ function open(opts = {}) {
       return `<label class="ap">${esc(w[k])}<input data-ap="${k}" type="text" dir="auto" placeholder="${esc(w.pick)}" value="${esc(code ? `${code}${city ? ' · ' + city : ''}` : '')}"${code && r[k + 'LL'] ? ' class="ok"' : ''}><small>${esc(r[k + 'Name'] || '')}</small></label>`;
     };
     const inp = (r, k, label, type, extra = '') => `<label class="${extra}">${esc(label)}<input data-k="${k}" type="${type}" dir="ltr" value="${esc(r[k] || '')}"></label>`;
-    // a time as three scroll wheels (hour, minute, AM/PM); kept as 24-hour "HH:MM"
-    const opt = (v, t, on) => `<option value="${v}"${on ? ' selected' : ''}>${t}</option>`;
-    const timeField = (r, k, label) => {
-      const m = String(r[k] || '').match(/^(\d\d):(\d\d)$/), H = m ? +m[1] : null, M = m ? +m[2] : null;
-      const h12 = H == null ? null : (H % 12 || 12), pm = H != null && H >= 12;
-      return `<div class="tm" data-t="${k}"><span>${esc(label)}</span><div dir="ltr">
-        <select data-p="h" aria-label="${esc(label)}">${opt('', '--', H == null)}${Array.from({ length: 12 }, (_, i) => opt(i + 1, i + 1, h12 === i + 1)).join('')}</select>
-        <select data-p="m">${opt('', '--', M == null)}${Array.from({ length: 60 }, (_, i) => opt(i, String(i).padStart(2, '0'), M === i)).join('')}</select>
-        <select data-p="a">${opt('AM', 'AM', !pm)}${opt('PM', 'PM', pm)}</select></div></div>`;
-    };
-    const timeOf = el => {
-      const h = el.querySelector('[data-p="h"]').value, m = el.querySelector('[data-p="m"]').value, a = el.querySelector('[data-p="a"]').value;
-      if (h === '' || m === '') return '';
-      const H = (+h % 12) + (a === 'PM' ? 12 : 0); return `${String(H).padStart(2, '0')}:${String(+m).padStart(2, '0')}`;
+    // a time: one field; tapping it opens wheels for hour, minute and AM/PM. Kept as 24-hour "HH:MM".
+    const show12 = v => { const m = String(v || '').match(/^(\d\d):(\d\d)$/); if (!m) return '--:--'; const H = +m[1]; return `${H % 12 || 12}:${m[2]} ${H < 12 ? 'AM' : 'PM'}`; };
+    const timeField = (r, k, label) => `<div class="tm" data-t="${k}"><span>${esc(label)}</span><button type="button" class="tbtn${r[k] ? '' : ' empty'}" data-v="${esc(r[k] || '')}" dir="ltr">${esc(show12(r[k]))}</button></div>`;
+    const pickTime = btn => {
+      const IH = 40, cur = String(btn.dataset.v || '').match(/^(\d\d):(\d\d)$/);
+      let H = cur ? +cur[1] : 12, M = cur ? +cur[2] : 0;
+      const cols = [{ k: 'h', items: Array.from({ length: 12 }, (_, i) => String(i + 1)), at: (H % 12 || 12) - 1 },
+        { k: 'm', items: Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')), at: M },
+        { k: 'a', items: ['AM', 'PM'], at: H < 12 ? 0 : 1 }];
+      const pk = document.createElement('div'); pk.className = 'tpk';
+      pk.innerHTML = `<div class="tpi"><b>${esc(btn.previousElementSibling.textContent)}</b><div class="wh" dir="ltr">${cols.map(c => `<div class="col" data-c="${c.k}">${c.items.map(x => `<div class="it">${x}</div>`).join('')}</div>`).join('')}<i class="band"></i></div>
+        <div class="tb"><button type="button" class="b" data-tclear>${esc(w.clearT)}</button><span class="sp"></span><button type="button" class="b go" data-tok>${esc(w.done)}</button></div></div>`;
+      v.appendChild(pk);
+      const colEls = [...pk.querySelectorAll('.col')];
+      colEls.forEach((el, n) => { el.scrollTop = cols[n].at * IH; el.addEventListener('click', e => { const it = e.target.closest('.it'); if (it) el.scrollTo({ top: [...el.children].indexOf(it) * IH, behavior: 'smooth' }); }); });
+      const val = () => { const [h, m, a] = colEls.map(el => Math.round(el.scrollTop / IH)); const h12 = h + 1; return `${String((h12 % 12) + (a ? 12 : 0)).padStart(2, '0')}:${String(m).padStart(2, '0')}`; };
+      const done = x => { if (x !== undefined) { btn.dataset.v = x; btn.textContent = show12(x); btn.classList.toggle('empty', !x); } pk.remove(); };
+      pk.addEventListener('click', e => {
+        if (e.target === pk) done();
+        else if (e.target.closest('[data-tok]')) done(val());
+        else if (e.target.closest('[data-tclear]')) done('');
+      });
     };
     const draw = () => {
       box.innerHTML = rows.map((r, n) => `<div class="fr" data-n="${n}">${apField(r, 'from')}${apField(r, 'to')}
@@ -132,7 +149,7 @@ function open(opts = {}) {
     const read = () => box.querySelectorAll('.fr').forEach(el => {
       const r = rows[+el.dataset.n];
       el.querySelectorAll('input[data-k]').forEach(i => { const k = i.dataset.k; r[k] = k === 'flight' ? i.value.trim().toUpperCase() : i.value.trim(); });
-      el.querySelectorAll('.tm').forEach(t => { r[t.dataset.t] = timeOf(t); });
+      el.querySelectorAll('.tm').forEach(t => { r[t.dataset.t] = t.querySelector('.tbtn').dataset.v || ''; });
     });
     const closeSug = () => v.querySelectorAll('.sug').forEach(s => s.remove());
     const choose = (r, k, a) => { r[k] = a[0]; r[k + 'City'] = a[1]; r[k + 'Country'] = a[2]; r[k + 'LL'] = [a[3], a[4]]; r[k + 'Name'] = a[6]; };
@@ -170,6 +187,7 @@ function open(opts = {}) {
     v.addEventListener('pointerdown', e => { if (e.target === v) close(null); });
     f.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
+      if (b.classList.contains('tbtn')) { pickTime(b); return; }
       if (b.dataset.rm != null) { read(); rows.splice(+b.dataset.rm, 1); if (!rows.length) rows.push({}); draw(); }
       else if (b.hasAttribute('data-add')) { read(); rows.push({}); draw(); box.lastElementChild.querySelector('input').focus(); }
       else if (b.hasAttribute('data-clear')) { if (confirm(w.clearQ)) close([]); }

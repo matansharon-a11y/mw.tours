@@ -40,7 +40,7 @@ commit finished work straight to `main`; there is no build step.
   coast, shaded relief), detail layers fade at their edges; `geo.credits` replaces the default credit line.
 - Flights, typed by each traveler: "Add your flights" beside "Add to calendar" (`assets/flights.js`: From/To picked from
   `assets/airports.js`, 3,244 airports with scheduled service from OurAirports, loaded when the sheet opens; date, times,
-  flight no. optional; times as hour / minute / AM-PM wheels (selects), stored 24-hour, shown AM/PM in English and 24-hour
+  flight no. optional; times: one field each that opens hour / minute / AM-PM scroll wheels, stored 24-hour, shown AM/PM in English and 24-hour
   in Hebrew). No file reading any more (ticket upload was removed 12.10.2026). Rows are kept in
   `mw-tour-<slug>-flights` with each airport's code, city and lonlat, synced to the traveler's own account; private: the
   admin's view-as does not show them. The Flights block is empty until the traveler adds flights.
