@@ -498,6 +498,8 @@ figure.ph figcaption{position:absolute;inset-inline-end:10px;bottom:8px;font:500
 .roles b{display:block;font-size:20px;color:var(--bark)}
 .roles span{font-size:14.5px;color:#3B5168}
 .bioband{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:40px;align-items:start;max-width:1000px}
+.bioband.no-ph{grid-template-columns:minmax(0,1fr);max-width:760px}
+.bioband.no-ph.has-story{grid-template-areas:"bio" "story"}
 .bioband .ph{aspect-ratio:4/5;border-radius:18px;box-shadow:0 24px 60px rgba(30,51,78,.28)}
 /* with a story: one text column (bio, then the story) beside one photo that stays in view */
 .bioband.has-story{grid-template-areas:"bio ph" "story ph";row-gap:0}
@@ -2407,12 +2409,12 @@ function renderLeader() {
   const ld = T.leader, l = L.l, [first, ...rest] = ld.name[lang].split(' ');
   const face = ld.photo ? `<img src="${esc(ld.photo)}" alt="${esc(ld.name[lang])}">` : `<span class="mono"><span class="mark"></span></span>`;
   const wa = `https://wa.me/${ld.wa}?text=${encodeURIComponent(tx(ld.waText) || l.waText)}`;
-  const band = ld.band ? `<figure class="ph"><img src="${esc(ld.band.src)}" alt="${esc(ld.band.alt[lang])}" loading="lazy" decoding="async"><figcaption>${esc(ld.band[lang])}</figcaption></figure>` : '';
+  const band = '';   // no "behind the scenes" photo in the leader room (even if the vault has one)
   $('#leader').innerHTML = `<div class="wrap">
     <header class="rh" style="--i:0"><p class="lbl">${esc(l.kicker)}</p></header>
     <div class="lead" style="--i:1"><div class="face">${face}</div><div><h2 class="tt ink"><span>${esc(first)}</span> <b>${esc(rest.join(' '))}</b></h2><p class="role">${esc(ld.role[lang])}</p></div></div>
     <div class="roles" style="--i:2">${ld.roles.map(r => `<div><b>${esc(r[lang][0])}</b><span>${esc(r[lang][1])}</span></div>`).join('')}</div>
-    <div class="bioband${ld.story && ld.story[lang] ? ' has-story' : ''}" style="--i:3"><div class="bio">${ld.bio[lang].map(p => `<p>${esc(p)}</p>`).join('')}</div>${band}
+    <div class="bioband no-ph${ld.story && ld.story[lang] ? ' has-story' : ''}" style="--i:3"><div class="bio">${ld.bio[lang].map(p => `<p>${esc(p)}</p>`).join('')}</div>${band}
     ${ld.story && ld.story[lang] ? `<article class="lstory"><p class="lbl">${esc(ld.story[lang].kicker || '')}</p>${ld.story[lang].title ? `<h3>${esc(ld.story[lang].title)}</h3>` : ''}${ld.story[lang].by ? `<p class="by">${esc(ld.story[lang].by)}</p>` : ''}${ld.story[lang].text.map(t => `<p class="t">${esc(t)}</p>`).join('')}</article>` : ''}</div>
     <section class="contact" style="--i:4"><h3 style="margin:0;font-size:24px;color:var(--bark)">${esc(l.contact)}</h3>
       <div class="acts"><a class="btn wa" href="${wa}" target="_blank" rel="noopener">${ic('wa')}<span>${esc(l.wa)}</span></a>

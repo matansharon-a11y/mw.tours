@@ -33,6 +33,7 @@ commit finished work straight to `main`; there is no build step.
 - Header photos (`heroes.<room>`): HD (about 2560 px wide), `focus`, optional `tall` (people photos),
   optional `phone` image + `phoneFocus` when the subject would sit under the title on a phone.
 - Leader role line: "Expedition leader, founder of MW Photo Tours" (`leader.role`), on every expedition.
+- Leader room: no "behind the scenes" photo/caption (`leader.band` is ignored); bio and story in one column.
 - Leader: optional `leader.story` {he, en: {kicker, by, text[]}}, shown in the text column beside the photo.
 - No photo beside the Flights block.
 - Story kinds: wildlife, conservation, legend, culture, history, food, landscape, sky (the last two came with Iceland).
