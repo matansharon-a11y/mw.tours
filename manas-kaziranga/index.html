@@ -1000,7 +1000,9 @@ function personalize(t) {
 // days spent in the same place share one map frame; stepping through them would only zoom.
 // Spread such a run across the place, west to east, so every day visibly moves to its own part of it.
 let RAW = null;
-const markLast = t => { const L = t.days.reduce((a, d) => d.n > a.n ? d : a); L.final = true; return t; };
+// first and last expedition day: no tasks (no look-for, no photo exercise); the last day shows only the farewell
+const markLast = t => { const F = t.days.reduce((a, d) => d.n < a.n ? d : a), L = t.days.reduce((a, d) => d.n > a.n ? d : a);
+  [F, L].forEach(d => { d.look = []; delete d.exercise; }); L.final = true; return t; };
 const buildTrip = () => spreadDays(withTickets(markLast(personalize(structuredClone(RAW)))));
 // the traveler's own flights shape their days: a flight on a trip day is shown on that day, and a flight before the
 // first day or after the last one adds a day of its own, so the dates on the map follow their ticket

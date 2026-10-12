@@ -38,7 +38,8 @@ commit finished work straight to `main`; there is no build step.
 - No photo beside the Flights block.
 - Last expedition day (`final`, set by `markLast` before the traveler's flights are added): a farewell line (`I.bye`, he/en)
   in place of its text in the day-by-day and on the map day card; that day shows no activities (no look-for, photo
-  exercise or schedule). Same wording on every tour.
+  exercise or schedule). Same wording on every tour. The first expedition day has no tasks either (`markLast` empties
+  `look` and drops `exercise` on both days).
 - Story kinds: wildlife, conservation, legend, culture, history, food, landscape, sky (the last two came with Iceland).
 - A tour without photos yet works: no `heroes` = plain room headers, stories/field cards show the contour placeholder,
   `tours.json` `cover: ""` shows an icon. Iceland (`iceland-2026`) has only its cover so far (photos/reynisdrangar.jpg).
