@@ -37,7 +37,7 @@ commit finished work straight to `main`; there is no build step.
 - Leader: optional `leader.story` {he, en: {kicker, by, text[]}}, shown in the text column beside the photo.
 - Two or more leaders: vault `leaders: [{name, role, photo, roles, bio, story, wa, waText, phone, email, instagram,
   facebook, web}]` turns the Leader room into one expandable card each (`leaderCards`), with that leader's details,
-  contact and social links; no photo = initials. Iceland has Matan + Kelvin Yuen (Kelvin's photo still to come).
+  contact and social links; no photo = initials. Iceland has Matan + Kelvin Yuen (photos/kelvin.jpg).
 - No photo beside the Flights block.
 - Last expedition day (`final`, set by `markLast` before the traveler's flights are added): a farewell line (`I.bye`, he/en)
   in place of its text in the day-by-day and on the map day card; that day shows no activities (no look-for, photo
