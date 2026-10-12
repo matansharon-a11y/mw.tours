@@ -70,6 +70,7 @@ commit finished work straight to `main`; there is no build step.
   traveler's own, merged and sorted by date (a typed copy of a tour flight shows once); "Add to calendar" exports them all.
   Each row: date + weekday, departure time with → arrival under it, route codes, flight no. as a pill (all in the one
   sans font); a missing time/flight no. shows "Time TBC" / "Flight no. TBC" (Manas GAU→DEL for travelers with no personal entry).
+  No note under the flights (`flights.<lang>.note` is not shown): meeting points and terminals belong in the day-by-day text.
   Each flight has a small pencil that opens the sheet on that row.
   Flights shape the map (`withTickets`, rebuilt from `RAW` + `buildMap()` on save): each flight becomes a flight line
   between its airports (new airport places `u-<code>`), and the group's own flight lines are dropped on the days of the
