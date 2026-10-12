@@ -17,7 +17,8 @@ commit finished work straight to `main`; there is no build step.
   "Not you? Sign out" (back to the name + code screen; the next person starts clean).
 - `admin/`: Matan's admin (Supabase login): connect an expedition once with its code, see the code,
   add the traveler list (each with optional names in other languages, e.g. Hebrew; any of them signs in:
-  `supabase-update-other-names.txt`, `tour_travelers.other_names`; only a name on it can join: first, middle or last name, then the code; an empty
+  `supabase-update-other-names.txt`, `tour_travelers.other_names`; each row has a ⋯ menu: Edit (name + other names,
+  `admin_update_traveler`) and Remove; only a name on it can join: first, middle or last name, then the code; an empty
   list means no one can join; the first sign-in needs a connection, there is no code-only way in),
   shared photos. Tapping a traveler's name opens `<tour>/?as=<member or list id>` (also before they joined): that traveler's view,
   read only (`assets/viewas.js` keeps their lists in that tab so the admin's own are untouched).
