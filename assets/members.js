@@ -15,7 +15,7 @@ const CFG = {
   url: 'https://uiydebfzuxnxjqcnrylv.supabase.co',
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpeWRlYmZ6dXhueGpxY25yeWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNzY2MjksImV4cCI6MjEwNjc1MjYyOX0.JwQ2bAjMrZZCnhFq79V8W5lnzcNz-zpf8IW6xFC4Mko',
 };
-const LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+const LIB = '/assets/vendor/supabase-js-2.118.0.js';   // a fixed copy in the site, not a CDN version that updates itself
 const BUCKET = 'tour-photos';
 
 const vaultEl = document.getElementById('vault');
