@@ -1217,6 +1217,9 @@ function buildMap() {
     for (const [pid, pl] of Object.entries(T.places)) { const q = P(pl.lonlat), d = Math.hypot(q[0] - end[0], q[1] - end[1]); if (d < best) { best = d; arrive = pid; } }
     legs[id] = { id, leg, pts, cum, p: 0, ghost, arrive: best < 20 ? arrive : null, cas: fl ? null : mk('#g-case', 'case'), ink: mk(fl ? '#g-fink' : '#g-ink', 'ink' + (fl ? ' fl' : '')) };
   }
+  dashBox = null;
+  svg.querySelectorAll(DASHED).forEach(el => { el._src = el.getAttribute('d'); el._pl = null; });
+  flowSvg.querySelectorAll('.flow').forEach(el => { el._src = el.getAttribute('d'); el._pl = null; });
 }
 
 function partial(Lg, p) {
@@ -1237,7 +1240,7 @@ function setLeg(id, p) {
   const Lg = legs[id]; if (!Lg) return null;
   Lg.p = p;
   const r = partial(Lg, p);
-  Lg.ink.setAttribute('d', r.d);
+  if (Lg.leg.type === 'flight') setDashed(Lg.ink, r.d); else Lg.ink.setAttribute('d', r.d);
   if (Lg.cas) Lg.cas.setAttribute('d', r.d);
   return r;
 }
@@ -1318,6 +1321,43 @@ function placeOverlay() {
   placePop();
 }
 
+// Dashed lines (borders, state lines, route ghosts, flight lines, the river's dashes): the phone works out every
+// dash along a line's whole length, even off screen, and zoomed in that's millions of dashes (zoom froze for up
+// to 2 s). So dashed lines are drawn only near the screen: each keeps its full line in el._src, and every map
+// redraw (commitMap) keeps just the stretches that reach the drawn area.
+const DASHED = '.bd,.st,.ghost,.ink.fl,.flow';
+let dashBox = null;
+function parseLine(d) {
+  const subs = []; let cur = null;
+  for (const m of String(d || '').matchAll(/([ML])\s*(-?[\d.]+)[ ,]+(-?[\d.]+)/g)) {
+    const q = [+m[2], +m[3]];
+    if (m[1] === 'M' || !cur) { cur = [q]; subs.push(cur); } else cur.push(q);
+  }
+  return subs;
+}
+function clipDashed(el) {
+  if (el._src == null) return;
+  if (!dashBox) { el.setAttribute('d', el._src); return; }
+  if (!el._pl) el._pl = parseLine(el._src);
+  const [x0, y0, x1, y1] = dashBox; let out = '';
+  for (const s of el._pl) {
+    let run = false;
+    if (s.length === 1) continue;
+    for (let i = 1; i < s.length; i++) {
+      const a = s[i - 1], b = s[i];
+      if (Math.max(a[0], b[0]) < x0 || Math.min(a[0], b[0]) > x1 || Math.max(a[1], b[1]) < y0 || Math.min(a[1], b[1]) > y1) { run = false; continue; }
+      if (!run) { out += 'M' + a[0] + ' ' + a[1]; run = true; }
+      out += 'L' + b[0] + ' ' + b[1];
+    }
+  }
+  el.setAttribute('d', out);
+}
+function setDashed(el, d) { el._src = d; el._pl = null; clipDashed(el); }
+function clipAllDashed(box) {
+  dashBox = box;
+  svg.querySelectorAll(DASHED).forEach(clipDashed);
+  flowSvg.querySelectorAll('.flow').forEach(clipDashed);
+}
 // Smooth map: redrawing the whole map picture (satellite images, borders, rivers) is the slow part, so it's
 // done only now and then (commitMap). In between, the picture already drawn is just moved and scaled on the
 // graphics chip (a CSS transform), which phones do at full speed. The picture is drawn with a margin around
@@ -1332,6 +1372,7 @@ function commitMap(still) {
   svg.setAttribute('viewBox', box); flowSvg.setAttribute('viewBox', box);
   svg.style.setProperty('--px', (1 / vc.s) + 'px'); flowSvg.style.setProperty('--px', (1 / vc.s) + 'px');
   svg.style.transform = flowSvg.style.transform = '';
+  clipAllDashed([vx - w * 0.1, vy - h * 0.1, vx + w * 1.1, vy + h * 1.1]);
   const sp = W / vc.s / DEG, ppd = vc.s * DEG;
   if (!groups) groups = ['#g-wide', '#g-near', '#g-areas', '#g-fly', '#g-rivers'].map(s => $(s, svg));
   const near = clamp((16 - sp) / 6, 0, 1), rivers = clamp((170 - ppd) / 90, 0, 1);
