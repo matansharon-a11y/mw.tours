@@ -148,6 +148,8 @@ body.tc3 .tabs button{padding-inline:12px}body.tc3 .tabs button span{display:non
 #mapsvg,#flowsvg{position:absolute;inset:-25%;width:150%;height:150%;display:block;transform-origin:50% 50%;will-change:transform}
 #flowsvg{pointer-events:none}
 #mapsvg #g-wide,#mapsvg #g-near,#mapsvg #g-areas,#mapsvg #g-fly,#mapsvg #g-rivers{transition:opacity .35s}
+/* the horizon fade is only needed while the camera leans in (flights); without a tilt it cost a full extra pass every frame */
+#map:not(.tilted) .stage{-webkit-mask-image:none;mask-image:none}
 /* decorative motion rests while the map moves, and when it can't be seen */
 #map.moving .flow,#map.moving .sky i,#map.moving #birds *,.sky.still i,#birds.still *{animation-play-state:paused}
 #mapsvg .bd{fill:none;stroke:rgba(254,251,241,.38);stroke-width:calc(var(--px) * 1);stroke-dasharray:calc(var(--px) * 4) calc(var(--px) * 3)}
@@ -1538,6 +1540,7 @@ function tiltTo(deg, ms = 1000) {
       mapEl.style.setProperty('--tilt', tilt.toFixed(2) + 'deg');
       mapEl.style.setProperty('--tz', (1 + tilt / 90).toFixed(3));
       mapEl.style.setProperty('--tilt-k', (tilt / 50).toFixed(3));
+      mapEl.classList.toggle('tilted', tilt > 0.05);
       if (k < 1) requestAnimationFrame(step); else res();
     };
     requestAnimationFrame(step);
