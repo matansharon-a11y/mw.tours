@@ -150,6 +150,13 @@ body.tc3 .tabs button{padding-inline:12px}body.tc3 .tabs button span{display:non
 #mapsvg #g-wide,#mapsvg #g-near,#mapsvg #g-areas,#mapsvg #g-fly,#mapsvg #g-rivers{transition:opacity .35s}
 /* the horizon fade is only needed while the camera leans in (flights); without a tilt it cost a full extra pass every frame */
 #map:not(.tilted) .stage{-webkit-mask-image:none;mask-image:none}
+/* the glowing rings rest while the map moves */
+#map.moving .spot i::after,#map.moving .mk.here .dot::before,#map.moving .cnt::after,#map.moving .clu::after,#map.moving .pin>.b::after,#map.moving .veh .halo{animation-play-state:paused}
+/* Light mode for phones that can't keep up (switched on by itself after a laggy drag, see probeLite):
+   solid dark panels instead of frosted glass, and no drifting clouds, mist, birds, river dashes or glowing rings */
+body.lite .top,body.lite .tabs,body.lite .backbtn,body.lite .icbtn,body.lite .mfilter button,body.lite .timeline,body.lite .daycard,body.lite #pop,body.lite #jskip{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(10,9,8,.9)!important}
+body.lite #clouds,body.lite #mist,body.lite #birds{display:none!important}
+body.lite #flowsvg .flow,body.lite .spot i::after,body.lite .mk.here .dot::before,body.lite .cnt::after,body.lite .clu::after,body.lite .pin>.b::after,body.lite .veh .halo{animation:none!important}
 /* decorative motion rests while the map moves, and when it can't be seen */
 #map.moving .flow,#map.moving .sky i,#map.moving #birds *,.sky.still i,#birds.still *{animation-play-state:paused}
 #mapsvg .bd{fill:none;stroke:rgba(254,251,241,.38);stroke-width:calc(var(--px) * 1);stroke-dasharray:calc(var(--px) * 4) calc(var(--px) * 3)}
@@ -1351,6 +1358,29 @@ function commitMap(still) {
   });
   if (still) mapEl.classList.remove('moving');
 }
+// Light mode: if the map can't keep up while it's being moved on this phone (half the frames slower than
+// about 40 a second), switch to the light look and remember it on this device.
+const LITE_KEY = 'mw-map-lite';
+try { if (localStorage.getItem(LITE_KEY) === '1') document.body.classList.add('lite'); } catch (e) {}
+let liteProbe = 0, liteChecked = false;
+const liteD = [];   // frame times while the map moves, gathered over one or more drags
+function probeLite() {
+  if (liteChecked || liteProbe || reduce || document.body.classList.contains('lite')) return;
+  let last = 0, skip = 3;   // the first frames of a gesture include the gesture's own start-up
+  const step = t => {
+    if (!mapEl.classList.contains('moving')) { liteProbe = 0; return; }
+    if (last && !skip) liteD.push(t - last); else if (last) skip--;
+    last = t;
+    if (liteD.length < 40) { liteProbe = requestAnimationFrame(step); return; }
+    liteProbe = 0; liteChecked = true;
+    const d = liteD.slice().sort((a, b) => a - b);
+    if (d[d.length >> 1] > 25) {
+      document.body.classList.add('lite');
+      try { localStorage.setItem(LITE_KEY, '1'); } catch (e) {}
+    }
+  };
+  liteProbe = requestAnimationFrame(step);
+}
 function render() {
   const sp = span(), ppd = ppdNow();
   if (!reduce) {
@@ -1367,6 +1397,7 @@ function render() {
     if (!covered || k > 1.6) commitMap(false);
     else svg.style.transform = flowSvg.style.transform = `translate3d(${tx.toFixed(1)}px,${ty.toFixed(1)}px,0) scale(${k.toFixed(5)})`;
     mapEl.classList.add('moving');
+    probeLite();
     clearTimeout(sharpT); sharpT = setTimeout(() => commitMap(true), 140);
   }
   placeOverlay();
