@@ -145,13 +145,17 @@ body.tc3 .tabs button{padding-inline:12px}body.tc3 .tabs button span{display:non
   /* the far edge of a tilted map dissolves into the sky, like a horizon */
   -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 calc(var(--tilt-k,0) * 30%));mask-image:linear-gradient(180deg,transparent 0,#000 calc(var(--tilt-k,0) * 30%))}
 #map.titling .ov{opacity:0}
-#mapsvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+#mapsvg,#flowsvg{position:absolute;inset:-25%;width:150%;height:150%;display:block;transform-origin:50% 50%;will-change:transform}
+#flowsvg{pointer-events:none}
+#mapsvg #g-wide,#mapsvg #g-near,#mapsvg #g-areas,#mapsvg #g-fly,#mapsvg #g-rivers{transition:opacity .35s}
+/* decorative motion rests while the map moves, and when it can't be seen */
+#map.moving .flow,#map.moving .sky i,#map.moving #birds *,.sky.still i,#birds.still *{animation-play-state:paused}
 #mapsvg .bd{fill:none;stroke:rgba(254,251,241,.38);stroke-width:calc(var(--px) * 1);stroke-dasharray:calc(var(--px) * 4) calc(var(--px) * 3)}
 #mapsvg .st{fill:none;stroke:rgba(254,251,241,.2);stroke-width:calc(var(--px) * .8);stroke-dasharray:calc(var(--px) * 1.5) calc(var(--px) * 3)}
 #mapsvg .rv{fill:none;stroke:#3C7484;stroke-opacity:.75;stroke-width:calc(var(--px) * 1.2);stroke-linecap:round;stroke-linejoin:round}
 #mapsvg .rv.big{stroke:#3F7C8C;stroke-opacity:.82;stroke-width:max(calc(var(--px) * 2.2),3.4px)}
 /* the Brahmaputra flows: light dashes drifting downstream */
-#mapsvg .flow{fill:none;stroke:rgba(200,236,244,.5);stroke-width:max(calc(var(--px) * .9),1.1px);stroke-linecap:round;stroke-dasharray:calc(var(--px) * 3) calc(var(--px) * 22);animation:flow 5s linear infinite}
+#flowsvg .flow{fill:none;stroke:rgba(200,236,244,.5);stroke-width:max(calc(var(--px) * .9),1.1px);stroke-linecap:round;stroke-dasharray:calc(var(--px) * 3) calc(var(--px) * 22);animation:flow 5s linear infinite}
 @keyframes flow{to{stroke-dashoffset:calc(var(--px) * -50)}}
 #mapsvg .ghost{fill:none;stroke:rgba(254,251,241,.4);stroke-width:calc(var(--px) * 1.3);stroke-dasharray:calc(var(--px) * 1.5) calc(var(--px) * 4.5);stroke-linecap:round}
 #mapsvg .case{fill:none;stroke:rgba(10,9,8,.72);stroke-width:calc(var(--px) * 7);stroke-linecap:round;stroke-linejoin:round}
@@ -810,7 +814,7 @@ body.tc3 .tabs button{padding-inline:12px}body.tc3 .tabs button span{display:non
     <main>
       <section class="room" id="route" aria-labelledby="t-route">
         <div id="map">
-          <div class="stage"><svg id="mapsvg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
+          <div class="stage"><svg id="mapsvg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="flowsvg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
           <div id="tint"><canvas id="stars"></canvas></div>
           <div class="sky" id="clouds" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
           <div class="sky" id="mist" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -1177,7 +1181,7 @@ const OX = mx(GEO.origin[0]), OY = my(GEO.origin[1]);
 const P = ([lon, lat]) => [mx(lon) - OX, my(lat) - OY];
 const DEG = Z / 360;      // map units per degree of longitude
 
-const mapEl = $('#map'), svg = $('#mapsvg'), ov = $('#ov'), pop = $('#pop'), dock = $('#dock'), card = $('#daycard');
+const mapEl = $('#map'), svg = $('#mapsvg'), flowSvg = $('#flowsvg'), ov = $('#ov'), pop = $('#pop'), dock = $('#dock'), card = $('#daycard');
 // focusing an off-screen marker must never scroll the map box itself
 mapEl.addEventListener('scroll', () => { mapEl.scrollTop = 0; mapEl.scrollLeft = 0; });
 let W = 1, H = 1, view = { x: 0, y: 0, s: 1 };
@@ -1201,9 +1205,10 @@ function buildMap() {
   svg.innerHTML = `<defs><radialGradient id="glow"><stop offset="0" stop-color="#C9E2A8" stop-opacity=".22"/><stop offset=".6" stop-color="#A9C48C" stop-opacity=".1"/><stop offset="1" stop-color="#A9C48C" stop-opacity="0"/></radialGradient></defs>
     <g>${imgs}</g><g id="g-areas">${areas}</g>
     <g id="g-wide"><path class="bd" d="${GEO.paths.bordersWide}"/><path class="rv" d="${GEO.paths.riversWide}"/></g>
-    <g id="g-near"><path class="st" d="${GEO.paths.states || ''}"/><path class="bd" d="${GEO.paths.bordersNear || ''}"/><g id="g-rivers"><path class="rv" d="${GEO.paths.riversNear || ''}"/><path class="rv big" d="${river}"/>${reduce || !river ? '' : `<path class="flow" d="${river}"/>`}</g></g>
+    <g id="g-near"><path class="st" d="${GEO.paths.states || ''}"/><path class="bd" d="${GEO.paths.bordersNear || ''}"/><g id="g-rivers"><path class="rv" d="${GEO.paths.riversNear || ''}"/><path class="rv big" d="${river}"/></g></g>
     <g id="g-fly"><g id="g-fghost"></g><g id="g-fink"></g></g><g id="g-ghost"></g><g id="g-case"></g><g id="g-ink"></g>`;
   groups = null; legs = {};
+  flowSvg.innerHTML = reduce || !(river) ? '' : `<path class="flow" d="${river}"/>`; vc = null;
   const NS = 'http://www.w3.org/2000/svg';
   for (const [id, leg] of Object.entries(T.legs)) {
     let pts;
@@ -1326,31 +1331,57 @@ function placeOverlay() {
   placePop();
 }
 
-function render() {
-  const w = W / view.s, h = H / view.s;
-  svg.setAttribute('viewBox', `${view.x - w / 2} ${view.y - h / 2} ${w} ${h}`);
-  svg.style.setProperty('--px', (1 / view.s) + 'px');
-  const sp = span(), ppd = ppdNow();
+// Smooth map: redrawing the whole map picture (satellite images, borders, rivers) is the slow part, so it's
+// done only now and then (commitMap). In between, the picture already drawn is just moved and scaled on the
+// graphics chip (a CSS transform), which phones do at full speed. The picture is drawn with a margin around
+// the screen (MAP_BLEED), so panning or zooming out doesn't show an empty edge before the next redraw, and it
+// is redrawn sharp as soon as the map stops moving.
+const MAP_BLEED = 1.5;
+let vc = null, sharpT = 0;
+function commitMap(still) {
+  clearTimeout(sharpT); sharpT = 0;
+  vc = { ...view, W, H };
+  const w = W * MAP_BLEED / vc.s, h = H * MAP_BLEED / vc.s, vx = vc.x - w / 2, vy = vc.y - h / 2, box = `${vx} ${vy} ${w} ${h}`;
+  svg.setAttribute('viewBox', box); flowSvg.setAttribute('viewBox', box);
+  svg.style.setProperty('--px', (1 / vc.s) + 'px'); flowSvg.style.setProperty('--px', (1 / vc.s) + 'px');
+  svg.style.transform = flowSvg.style.transform = '';
+  const sp = W / vc.s / DEG, ppd = vc.s * DEG;
   if (!groups) groups = ['#g-wide', '#g-near', '#g-areas', '#g-fly', '#g-rivers'].map(s => $(s, svg));
+  const near = clamp((16 - sp) / 6, 0, 1), rivers = clamp((170 - ppd) / 90, 0, 1);
   groups[0].style.opacity = clamp((sp - 5) / 5, 0, 1);
-  groups[1].style.opacity = clamp((16 - sp) / 6, 0, 1);
+  groups[1].style.opacity = near;
   groups[2].style.opacity = clamp((5 - sp) / 2, 0, 1);
   groups[3].style.opacity = clamp((420 - ppd) / 160, 0, 1); // flight arcs step back at park scale
-  groups[4].style.opacity = clamp((170 - ppd) / 90, 0, 1);  // up close the satellite shows the real river
-  if (!reduce) {
-    $('#mist').style.opacity = (clamp((ppd - 220) / 260, 0, 1) * 0.9).toFixed(3);
-    $('#clouds').style.opacity = (clamp((ppd - 40) / 80, 0, 1) * clamp((900 - ppd) / 400, 0, 1)).toFixed(3);
-    $('#birds').style.opacity = (journeyOn ? 0 : clamp((ppd - 150) / 150, 0, 1)).toFixed(3);
-  }
-  // draw only the map pictures that are on screen; the whole-world base only where the tour's own world map ends
-  // (fewer and smaller pictures to redraw on every frame: no flicker while the map moves)
-  const vx = view.x - w / 2, vy = view.y - h / 2, inside = im => vx >= im.x && vy >= im.y && vx + w <= im.x + im.w && vy + h <= im.y + im.h;
+  groups[4].style.opacity = rivers;                          // up close the satellite shows the real river
+  flowSvg.style.opacity = near * rivers;                     // the river's drifting dashes follow the river
+  // draw only the map pictures that are (nearly) on screen; the whole-world base only where the tour's own world map ends
+  const inside = im => vx >= im.x && vy >= im.y && vx + w <= im.x + im.w && vy + h <= im.y + im.h;
   const world = GEO.images.find(im => !/world-base/.test(im.src));
   $$('image[data-im]', svg).forEach(el => {
     const im = GEO.images[+el.dataset.im];
     const on = im.x < vx + w && im.x + im.w > vx && im.y < vy + h && im.y + im.h > vy && !(/world-base/.test(im.src) && world && inside(world));
     if (el._on !== on) { el._on = on; el.style.display = on ? '' : 'none'; }
   });
+  if (still) mapEl.classList.remove('moving');
+}
+function render() {
+  const sp = span(), ppd = ppdNow();
+  if (!reduce) {
+    const sky = (el, a) => { el.style.opacity = a.toFixed(3); el.classList.toggle('still', a < 0.005); };
+    sky($('#mist'), clamp((ppd - 220) / 260, 0, 1) * 0.9);
+    sky($('#clouds'), clamp((ppd - 40) / 80, 0, 1) * clamp((900 - ppd) / 400, 0, 1));
+    sky($('#birds'), journeyOn ? 0 : clamp((ppd - 150) / 150, 0, 1));
+  }
+  if (!vc || vc.W !== W || vc.H !== H || !groups) commitMap(true);
+  else {
+    const k = view.s / vc.s, tx = (vc.x - view.x) * view.s, ty = (vc.y - view.y) * view.s;
+    // redraw when the drawn picture would no longer cover the screen, or would look soft (zoomed in too far)
+    const covered = Math.abs(tx) <= (k * MAP_BLEED - 1) * W / 2 - 2 && Math.abs(ty) <= (k * MAP_BLEED - 1) * H / 2 - 2;
+    if (!covered || k > 1.6) commitMap(false);
+    else svg.style.transform = flowSvg.style.transform = `translate3d(${tx.toFixed(1)}px,${ty.toFixed(1)}px,0) scale(${k.toFixed(5)})`;
+    mapEl.classList.add('moving');
+    clearTimeout(sharpT); sharpT = setTimeout(() => commitMap(true), 140);
+  }
   placeOverlay();
 }
 
