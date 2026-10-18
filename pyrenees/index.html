@@ -145,9 +145,6 @@ body.tc3 .tabs button{padding-inline:12px}body.tc3 .tabs button span{display:non
   /* the far edge of a tilted map dissolves into the sky, like a horizon */
   -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 calc(var(--tilt-k,0) * 30%));mask-image:linear-gradient(180deg,transparent 0,#000 calc(var(--tilt-k,0) * 30%))}
 #map.titling .ov{opacity:0}
-/* the map photos are plain pictures the graphics chip moves and scales; they are never redrawn while the map moves */
-#mapimgs{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-#mapimgs img{position:absolute;left:0;top:0;display:block;max-width:none;transform-origin:0 0;will-change:transform;user-select:none;-webkit-user-drag:none}
 #mapsvg,#flowsvg,#routesvg{position:absolute;inset:-25%;width:150%;height:150%;display:block;transform-origin:50% 50%;will-change:transform}
 #flowsvg,#routesvg{pointer-events:none}
 #mapsvg #g-wide,#mapsvg #g-near,#mapsvg #g-areas,#routesvg #g-fly,#mapsvg #g-rivers{transition:opacity .35s}
@@ -156,8 +153,9 @@ body.tc3 .tabs button{padding-inline:12px}body.tc3 .tabs button span{display:non
 /* the glowing rings rest while the map moves */
 #map.moving .spot i::after,#map.moving .mk.here .dot::before,#map.moving .cnt::after,#map.moving .clu::after,#map.moving .pin>.b::after,#map.moving .veh .halo{animation-play-state:paused}
 /* Light mode for phones that can't keep up (switched on by itself after a laggy drag, see probeLite):
-   solid dark panels instead of frosted glass, and no drifting clouds, mist, birds, river dashes or glowing rings */
-body.lite .top,body.lite .tabs,body.lite .backbtn,body.lite .icbtn,body.lite .mfilter button,body.lite .timeline,body.lite .daycard,body.lite #pop,body.lite #jskip{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(10,9,8,.9)!important}
+   see-through panels without the frosted-glass blur, and no drifting clouds, mist, birds, river dashes or glowing rings */
+body.lite .top,body.lite .tabs,body.lite .backbtn,body.lite .icbtn,body.lite .mfilter button,body.lite .timeline,body.lite .daycard,body.lite #pop,body.lite #jskip{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+body.lite .daycard,body.lite .timeline,body.lite #pop{background:linear-gradient(180deg,rgba(10,9,8,.5),rgba(10,9,8,.66))!important}
 body.lite #clouds,body.lite #mist,body.lite #birds{display:none!important}
 body.lite #flowsvg .flow,body.lite .spot i::after,body.lite .mk.here .dot::before,body.lite .cnt::after,body.lite .clu::after,body.lite .pin>.b::after,body.lite .veh .halo{animation:none!important}
 /* decorative motion rests while the map moves, and when it can't be seen */
@@ -826,7 +824,7 @@ body.lite #flowsvg .flow,body.lite .spot i::after,body.lite .mk.here .dot::befor
     <main>
       <section class="room" id="route" aria-labelledby="t-route">
         <div id="map">
-          <div class="stage"><div id="mapimgs" aria-hidden="true"></div><svg id="mapsvg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="flowsvg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="routesvg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
+          <div class="stage"><svg id="mapsvg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="flowsvg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="routesvg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
           <div id="tint"><canvas id="stars"></canvas></div>
           <div class="sky" id="clouds" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
           <div class="sky" id="mist" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -1193,7 +1191,7 @@ const OX = mx(GEO.origin[0]), OY = my(GEO.origin[1]);
 const P = ([lon, lat]) => [mx(lon) - OX, my(lat) - OY];
 const DEG = Z / 360;      // map units per degree of longitude
 
-const mapEl = $('#map'), svg = $('#mapsvg'), flowSvg = $('#flowsvg'), routeSvg = $('#routesvg'), mapImgs = $('#mapimgs'), tintEl = $('#tint'), stages = $$('#map .stage'), ov = $('#ov'), pop = $('#pop'), dock = $('#dock'), card = $('#daycard');
+const mapEl = $('#map'), svg = $('#mapsvg'), flowSvg = $('#flowsvg'), routeSvg = $('#routesvg'), tintEl = $('#tint'), stages = $$('#map .stage'), ov = $('#ov'), pop = $('#pop'), dock = $('#dock'), card = $('#daycard');
 // focusing an off-screen marker must never scroll the map box itself
 mapEl.addEventListener('scroll', () => { mapEl.scrollTop = 0; mapEl.scrollLeft = 0; });
 let W = 1, H = 1, view = { x: 0, y: 0, s: 1 };
@@ -1209,14 +1207,13 @@ const visibleStories = () => T.stories.filter(s => filter === 'all' || s.kind ==
 
 function buildMap() {
   const river = GEO.paths.mainRiver || GEO.paths.brahmaputra || '';
-  mapImgs.innerHTML = GEO.images.map((im, i) => `<img data-im="${i}" src="${im.src}" alt="" decoding="async" draggable="false" hidden>`).join('');
-  $$('img', mapImgs).forEach(el => { const ok = () => { el._nw = el.naturalWidth; el._nh = el.naturalHeight; el._on = undefined; if (W > 1) placeImages(); }; if (el.complete && el.naturalWidth) ok(); else el.addEventListener('load', ok, { once: true }); });
+  const imgs = GEO.images.map((im, i) => `<image data-im="${i}" href="${im.src}" x="${im.x}" y="${im.y}" width="${im.w}" height="${im.h}" preserveAspectRatio="none"/>`).join('');
   const areas = T.areas.map(a => {
     const [x, y] = P(a.lonlat), rx = a.rx * DEG, ry = (my(a.lonlat[1] - a.ry) - my(a.lonlat[1] + a.ry)) / 2;
     return `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${a.rot} ${x} ${y})" fill="url(#glow)"/>`;
   }).join('');
   svg.innerHTML = `<defs><radialGradient id="glow"><stop offset="0" stop-color="#C9E2A8" stop-opacity=".22"/><stop offset=".6" stop-color="#A9C48C" stop-opacity=".1"/><stop offset="1" stop-color="#A9C48C" stop-opacity="0"/></radialGradient></defs>
-    <g id="g-areas">${areas}</g>
+    <g>${imgs}</g><g id="g-areas">${areas}</g>
     <g id="g-wide"><path class="bd" d="${GEO.paths.bordersWide}"/><path class="rv" d="${GEO.paths.riversWide}"/></g>
     <g id="g-near"><path class="st" d="${GEO.paths.states || ''}"/><path class="bd" d="${GEO.paths.bordersNear || ''}"/><g id="g-rivers"><path class="rv" d="${GEO.paths.riversNear || ''}"/><path class="rv big" d="${river}"/></g></g>`;
   // the route lines are drawn bit by bit as a day plays: on their own layer, so the rest of the map isn't redrawn with them
@@ -1410,6 +1407,14 @@ function commitMap(still) {
   groups[3].style.opacity = clamp((420 - ppd) / 160, 0, 1); // flight arcs step back at park scale
   groups[4].style.opacity = rivers;                          // up close the satellite shows the real river
   flowSvg.style.opacity = near * rivers;                     // the river's drifting dashes follow the river
+  // draw only the map pictures that are (nearly) on screen; the whole-world base only where the tour's own world map ends
+  const inside = im => vx >= im.x && vy >= im.y && vx + w <= im.x + im.w && vy + h <= im.y + im.h;
+  const world = GEO.images.find(im => !/world-base/.test(im.src));
+  $$('image[data-im]', svg).forEach(el => {
+    const im = GEO.images[+el.dataset.im];
+    const on = im.x < vx + w && im.x + im.w > vx && im.y < vy + h && im.y + im.h > vy && !(/world-base/.test(im.src) && world && inside(world));
+    if (el._on !== on) { el._on = on; el.style.display = on ? '' : 'none'; }
+  });
   if (still) mapEl.classList.remove('moving');
   probeLiteIdle();
 }
@@ -1430,20 +1435,6 @@ function probeLiteIdle() {
     };
     requestAnimationFrame(step);
   }, 2500);
-}
-// the map photos: placed every frame from the camera; only those on screen are shown, and the whole-world base
-// only where the tour's own world map doesn't cover the screen
-function placeImages() {
-  const w = W / view.s, h = H / view.s, vx = view.x - w / 2, vy = view.y - h / 2;
-  const world = GEO.images.find(im => !/world-base/.test(im.src));
-  const inside = im => vx >= im.x && vy >= im.y && vx + w <= im.x + im.w && vy + h <= im.y + im.h;
-  $$('img', mapImgs).forEach(el => {
-    if (!el._nw) return;
-    const im = GEO.images[+el.dataset.im];
-    const on = im.x < vx + w && im.x + im.w > vx && im.y < vy + h && im.y + im.h > vy && !(/world-base/.test(im.src) && world && inside(world));
-    if (el._on !== on) { el._on = on; el.hidden = !on; }
-    if (on) el.style.transform = `translate3d(${((im.x - vx) * view.s).toFixed(2)}px,${((im.y - vy) * view.s).toFixed(2)}px,0) scale(${(im.w * view.s / el._nw).toFixed(6)},${(im.h * view.s / el._nh).toFixed(6)})`;
-  });
 }
 // Light mode: if the map can't keep up while it's being moved on this phone (half the frames slower than
 // about 40 a second), switch to the light look and remember it on this device.
@@ -1487,7 +1478,6 @@ function render() {
     probeLite();
     clearTimeout(sharpT); sharpT = setTimeout(() => commitMap(true), 140);
   }
-  placeImages();
   placeOverlay();
 }
 
