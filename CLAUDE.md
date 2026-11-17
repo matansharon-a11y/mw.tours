@@ -15,7 +15,9 @@ commit finished work straight to `main`; there is no build step.
   progress, group photo uploads on the Field cards. When you change it, bump `?v=` in every tour page.
   It also puts a name badge (`#mw-who`, initials + first name) in the top bar: tap it for the full name and
   "Not you? Sign out" (back to the name + code screen; the next person starts clean).
-- `admin/`: Matan's admin (Supabase login): connect an expedition once with its code, see the code,
+- `admin/`: Matan's admin (Supabase login): connect an expedition once with its code, see the code, change it
+  ("Change code": `supabase-update-change-code.txt`; only the Supabase code changes, the page stays locked with the code it was
+  connected with, which travelers never need again; the old code stops working, travelers who joined stay in),
   add the traveler list (each with optional names in other languages, e.g. Hebrew; any of them signs in:
   `supabase-update-other-names.txt`, `tour_travelers.other_names`; each row has a ⋯ menu: Edit (name + other names,
   `admin_update_traveler`) and Remove; only a name on it can join: first, middle or last name, then the code; an empty

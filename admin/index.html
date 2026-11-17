@@ -180,6 +180,7 @@ async function checkSetup(tours) {
     if (st && st.external && st.external.anonymous_users === false)
       todo.push('<b>Turn on anonymous sign-ins.</b> Supabase → Authentication → Sign In / Providers → "Allow anonymous sign-ins" → Save. Without it, travelers open the expedition but are never registered, so they don\u2019t appear here.');
   } catch (e) {}
+  if (tours.some(t => t.ready && !('code_edit' in t))) todo.push('<b>Run supabase-update-change-code.txt</b> in Supabase → SQL Editor, to change an expedition\u2019s code here.');
   if (tours.length && !('travelers' in tours[0])) todo.push('<b>Run supabase-update-travelers.txt</b> in Supabase → SQL Editor (the traveler list).');
   const v = await sb.rpc('admin_view_member', { p_member: '00000000-0000-0000-0000-000000000000' });
   if (v.error && /function|schema cache/i.test(v.error.message)) todo.push('<b>Run supabase-update-view-as.txt</b> in Supabase → SQL Editor (opening a traveler\u2019s view).');
@@ -217,7 +218,10 @@ function render(photos) {
 
       <h3>${ready ? 'Expedition code' : 'Connect this expedition'}</h3>
       ${ready ? `<div class="codebox">${d.code ? `<span class="codeval">${esc(d.code)}</span><button class="btn ghost small" type="button" data-copy="${esc(d.code)}">Copy</button>`
-            : '<span class="hint">Connected. Run the "show code" update in Supabase to see the code here.</span>'}</div>
+            : '<span class="hint">Connected. Run the "show code" update in Supabase to see the code here.</span>'}${d.code_edit ? '<button class="btn ghost small" type="button" data-chcode>Change code</button>' : ''}</div>
+        ${d.code_edit ? `<form class="row one" data-codeform hidden><label>New code for this expedition<input class="code" data-newcode spellcheck="false" autocapitalize="characters" autocomplete="off" placeholder="e.g. MWP-LADAKH"></label>
+          <span class="codebox"><button class="btn" type="submit">Save code</button><button class="btn ghost" type="button" data-cancelcode>Cancel</button></span>
+          <p class="hint" style="grid-column:1/-1">The old code stops working right away. Travelers who already joined stay signed in; new sign-ins use the new code.</p></form>` : ''}
         `
       : `<div class="row one"><label>The code this expedition opens with today<input class="code" data-secret spellcheck="false" autocapitalize="characters" placeholder="e.g. LYNX-2026" value="${esc(saved(t.slug))}"></label>
           <button class="btn" type="button" data-connect>Connect</button></div>
@@ -261,6 +265,12 @@ $('#tours').addEventListener('click', async e => {
       say(msg, 'Connected.', 'ok'); await load();
     } catch (err) { btn.disabled = false; say(msg, 'Could not save: ' + (err.message || err), 'err'); }
   }
+  if (btn.matches('[data-chcode]')) {
+    const f = card.querySelector('[data-codeform]'); f.hidden = !f.hidden;
+    if (!f.hidden) f.querySelector('input').focus();
+    return;
+  }
+  if (btn.matches('[data-cancelcode]')) { const f = card.querySelector('[data-codeform]'); f.hidden = true; f.reset(); say(msg, ''); return; }
   if (btn.matches('[data-copy]')) {
     try { await navigator.clipboard.writeText(btn.dataset.copy); btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); } catch (e) {}
     return;
@@ -305,6 +315,19 @@ $('#tours').addEventListener('click', async e => {
 $('#tours').addEventListener('submit', async e => {
   e.preventDefault();
   const f = e.target, card = f.closest('.card'), t = list[+card.dataset.i], msg = card.querySelector('[data-msg]');
+  if (f.matches('[data-codeform]')) {      // a new code: the old one stops working, the page itself stays as it is
+    const inp = f.querySelector('[data-newcode]'), code = inp.value.trim().replace(/\s+/g, ''), b = f.querySelector('[type=submit]');
+    if (norm(code).length < 4) { say(msg, 'The code needs at least 4 letters or numbers.', 'err'); return inp.focus(); }
+    if (norm(code) === norm(t.db && t.db.code)) { say(msg, 'That is already the code.', 'err'); return inp.focus(); }
+    if (!confirm(`Change the code of ${t.title?.en || t.slug} to ${code.toUpperCase()}?\n\nThe old code stops working right away. Travelers who already joined stay signed in.`)) return;
+    b.disabled = true; say(msg, 'Saving the new code…');
+    const { error } = await sb.rpc('admin_set_tour', { p_slug: t.slug, p_title: null, p_secret: null, p_code: code });
+    b.disabled = false;
+    if (error) return say(msg, 'Could not change the code: ' + error.message, 'err');
+    await load();
+    say(document.querySelector(`.card[data-i="${card.dataset.i}"] [data-msg]`), `Code changed to ${code.toUpperCase()}. Send travelers the new code.`, 'ok');
+    return;
+  }
   const other = (f.querySelector('[data-other]') || {}).value || '';
   const names = f.querySelector('input').value.split(/[,;\n]+/).map(n => n.trim()).filter(Boolean);
   if (!names.length) return f.querySelector('input').focus();
