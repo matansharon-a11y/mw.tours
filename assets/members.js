@@ -246,13 +246,23 @@ async function viewWithCode() {
   } catch (e) {}
 }
 
-// ---------- shots on the Field cards: one per traveler per card ----------
+// ---------- shots on the Field and Stories cards: one per traveler per card ----------
 // Saving data: thumbnails (about 15 KB) on the cards, the full photo only when opened; signed links are kept
 // on the device for days so the browser's cache serves repeat views; live updates carry only the small row,
 // and only while the Field room is on screen.
 let photos = [], names = {}, decoT = 0, loaded = false;
 const thumbOf = p => p.replace(/\.jpg$/, '_t.jpg');
-const itemOf = el => el.id.startsWith('fa-') ? { kind: 'animal', id: el.id.slice(3) } : { kind: 'exercise', id: el.id.slice(3) };
+const itemOf = el => ({ kind: el.id.startsWith('fa-') ? 'animal' : el.id.startsWith('st-') ? 'story' : 'exercise', id: el.id.slice(3) });
+// the rooms whose cards carry shots: Field (animals, exercises) and Stories
+const ROOMS = ['#field', '#stories'];
+// the page redraws these rooms (language, ticks, filters): put the shots back each time, load them when a room opens
+function watchRooms() {
+  ROOMS.forEach(r => {
+    const room = $(r); if (!room) return;
+    new MutationObserver(() => { clearTimeout(decoT); decoT = setTimeout(() => decorate(false), 60); }).observe(room, { childList: true, subtree: true });
+    new MutationObserver(() => { if (!room.hidden) { decorate(false); loadPhotos(); } else live(); }).observe(room, { attributes: true, attributeFilter: ['hidden'] });
+  });
+}
 const forItem = it => photos.filter(p => p.item_kind === it.kind && p.item_id === it.id);
 const whoOf = p => names[p.member_id] || p.members?.name || '';
 
@@ -285,9 +295,9 @@ async function loadPhotos() {
   } catch (e) { loaded = false; }
 }
 
-// live updates while the Field room is on screen
+// live updates while the Field or Stories room is on screen
 let chan = null;
-const fieldOn = () => { const f = $('#field'); return !!f && !f.hidden && document.visibilityState === 'visible'; };
+const fieldOn = () => document.visibilityState === 'visible' && ROOMS.some(r => { const f = $(r); return !!f && !f.hidden; });
 function live() {
   const want = !!((member || viewer) && sb && loaded && fieldOn());
   if (want && !chan) {
@@ -333,7 +343,7 @@ function fetchFull() {
   clearTimeout(fullT); fullT = setTimeout(async () => { try { await sign(need); decorate(true); } catch (e) {} }, 50);
 }
 function decorate(refresh) {
-  document.querySelectorAll('#field .ftile[id^="fa-"], #field .ftile[id^="fx-"]').forEach(tile => {
+  document.querySelectorAll('#field .ftile[id^="fa-"], #field .ftile[id^="fx-"], #stories .scard[id^="st-"]').forEach(tile => {
     const pic = tile.querySelector(':scope > .ph, :scope > .noph'); if (!pic) return;
     let o = pic.querySelector(':scope > .mwp-ov');
     if (o && !refresh) return;
@@ -615,11 +625,7 @@ async function asView() {
       asBar(w.asView(member.name) + (p === 'yes' ? ' · ' + w.asOwn : p === 'no' ? ' · ' + w.asGroup : ''), p !== 'no'); };
     show(); new MutationObserver(show).observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'data-personal'] });
     if (changed && reopen()) return;                // the page reads the lists when it opens
-    const field = $('#field');
-    if (field) {
-      new MutationObserver(() => { clearTimeout(decoT); decoT = setTimeout(() => decorate(false), 60); }).observe(field, { childList: true, subtree: true });
-      new MutationObserver(() => { if (!field.hidden) { decorate(false); loadPhotos(); } else live(); }).observe(field, { attributes: true, attributeFilter: ['hidden'] });
-    }
+    watchRooms();
     decorate(true); loadPhotos();
   } catch (e) { asNone(w.asFail); }
 }
@@ -631,13 +637,8 @@ function boot() {
   // the contour lines behind the code screen cover its whole height, also when it has to scroll
   const gate = $('#gate');
   if (gate) { const fit = () => gate.style.setProperty('--mw-gh', gate.scrollHeight + 'px'); fit(); addEventListener('resize', fit); setTimeout(fit, 800); }
-  // the Field room is redrawn by the page (language, ticks): put the galleries back each time
-  const field = $('#field');
-  if (field) {
-    new MutationObserver(() => { clearTimeout(decoT); decoT = setTimeout(() => decorate(false), 60); }).observe(field, { childList: true, subtree: true });
-    new MutationObserver(() => { if (!field.hidden) { decorate(false); loadPhotos(); } else live(); }).observe(field, { attributes: true, attributeFilter: ['hidden'] });
-    decorate(false); setTimeout(() => decorate(false), 1500);
-  }
+  watchRooms();
+  decorate(false); setTimeout(() => decorate(false), 1500);
   new MutationObserver(relabel).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   whoBadge(); resume();
 }

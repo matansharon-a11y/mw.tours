@@ -748,3 +748,8 @@ begin
 end $$;
 
 grant execute on function public.admin_set_tour(text, text, text, text), public.admin_overview() to authenticated;
+
+-- =====================================================================
+-- 7. PHOTOS ON THE STORIES CARDS TOO (same as supabase-update-story-photos.txt)
+alter table public.photos drop constraint if exists photos_item_kind_check;
+alter table public.photos add constraint photos_item_kind_check check (item_kind in ('animal', 'exercise', 'story'));

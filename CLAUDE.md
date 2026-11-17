@@ -12,7 +12,8 @@ commit finished work straight to `main`; there is no build step.
   own `img/`, `map/`, `photos/`. The trip content is encrypted in `<script id="vault">` with the
   expedition code (PBKDF2 + AES-GCM); never try to read or guess codes, and never write a code into a file.
 - `assets/members.js`: loaded by every tour. Traveler name on the code screen, Supabase sync of lists and
-  progress, group photo uploads on the Field cards. When you change it, bump `?v=` in every tour page.
+  progress, group photo uploads on the Field and Stories cards (the + on each card; story shots are
+  `item_kind` 'story', `supabase-update-story-photos.txt`). When you change it, bump `?v=` in every tour page.
   It also puts a name badge (`#mw-who`, initials + first name) in the top bar: tap it for the full name and
   "Not you? Sign out" (back to the name + code screen; the next person starts clean).
 - `admin/`: Matan's admin (Supabase login): connect an expedition once with its code, see the code, change it

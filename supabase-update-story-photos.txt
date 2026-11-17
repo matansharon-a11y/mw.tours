@@ -1,0 +1,7 @@
+-- =====================================================================
+-- MW Photo Tours · update: travelers add their photos to the Stories cards too (the + on each story, like Field)
+-- Supabase → SQL Editor → New query → paste this whole file → Run. Safe to run more than once.
+-- =====================================================================
+
+alter table public.photos drop constraint if exists photos_item_kind_check;
+alter table public.photos add constraint photos_item_kind_check check (item_kind in ('animal', 'exercise', 'story'));
