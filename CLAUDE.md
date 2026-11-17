@@ -8,7 +8,7 @@ commit finished work straight to `main`; there is no build step.
 - `index.html`: landing page ("Which expedition are you joining?"), lists the tours from `tours.json`.
 - `tours.json`: one entry per expedition: `path` (folder), `slug` (the id inside that page's
   `<script id="vault">`), `title`/`place` in `en` and `he`, `start`/`end` (YYYY-MM-DD), `cover`.
-- `<tour>/index.html` (`manas-kaziranga/`, `iberian-lynx/`, `pyrenees/`, `iceland/`): one expedition each, with its
+- `<tour>/index.html` (`manas-kaziranga/`, `iberian-lynx/`, `pyrenees/`, `iceland/`, `ladakh/`): one expedition each, with its
   own `img/`, `map/`, `photos/`. The trip content is encrypted in `<script id="vault">` with the
   expedition code (PBKDF2 + AES-GCM); never try to read or guess codes, and never write a code into a file.
 - `assets/members.js`: loaded by every tour. Traveler name on the code screen, Supabase sync of lists and
@@ -99,6 +99,8 @@ commit finished work straight to `main`; there is no build step.
   the trip (objects merge, arrays/values replace, null removes, `days` keyed by day number). Manas & Kaziranga
   uses it for each traveler's return flight from Guwahati. The trip starts in Delhi (the group meets in DEL arrivals,
   31.10 19:20); there is no group flight from Tel Aviv, each traveler adds their own flights.
+- Day card on phones (< 760 px): opens small (day, date, title) so the map stays visible; the chevron or a tap on the
+  card opens the full card (`cardFull`, kept while moving between days). Desktop always shows the full card. (17.11.2026)
 - Map days: each day has its own frame (`steps[].bbox`); days in a row with the same frame are spread automatically
   (`spreadDays`). A park day can carry `spot: {lonlat, he, en}`: a marked, labelled place shown on that day only.
 - The Flights block never shows a photo beside it (even if the vault has one); keep it that way in new tours.

@@ -333,6 +333,9 @@ body.lite #flowsvg .flow,body.lite .spot i::after,body.lite .mk.here .dot::befor
 .daycard .ctl{position:absolute;top:10px;inset-inline-end:10px;display:flex;gap:4px}
 .daycard .ctl button{width:38px;height:38px;border-radius:50%;border:1px solid var(--rule);background:rgba(10,9,8,.4);color:var(--paper);display:grid;place-items:center;cursor:pointer;padding:0}
 .daycard .ctl .ic{width:16px;height:16px}
+.daycard .ctl .cmore{display:none}
+.daycard .cmore .ic{transform:rotate(90deg);transition:transform .3s var(--ease)}
+.daycard.full .cmore .ic{transform:rotate(-90deg)}
 [dir=rtl] .daycard .flip{transform:scaleX(-1)}
 .daycard .more{justify-self:start;display:inline-flex;align-items:center;gap:6px;padding:0;border:0;background:none;color:var(--gold-soft);font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(228,170,124,.4);text-underline-offset:4px}
 .daycard .more .ic{width:15px;height:15px}
@@ -721,6 +724,12 @@ body.lite #flowsvg .flow,body.lite .spot i::after,body.lite .mk.here .dot::befor
   #pop .ph{aspect-ratio:16/9}
   @keyframes sheetIn{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:none}}
   .daycard{width:100%;max-height:38vh}
+  .daycard .ctl .cmore{display:grid}
+  .daycard:not(.intro) .hd{padding-inline-end:88px}
+  .daycard.mini{padding-block:12px;cursor:pointer}
+  .daycard.mini .c{gap:4px}
+  .daycard.mini .c>:not(.hd):not(h3){display:none}
+  .daycard.mini h3{font-size:17px;padding-inline-end:88px}
 }
 @media (max-width:560px){.wx{grid-template-columns:1fr;gap:12px}.wx svg{max-width:300px}.lead{grid-template-columns:1fr;justify-items:start;gap:18px;padding:20px}.face{width:96px;height:96px;padding:4px}.fact{align-items:flex-start}.fact .ring{width:40px;height:40px}.fact .ring .ic{width:18px;height:18px}.fact>div>span{font-size:15.5px}.bioband{grid-template-columns:1fr;gap:28px}
   .bioband.has-story{grid-template-areas:"bio" "ph" "story";row-gap:28px}
@@ -1185,7 +1194,7 @@ mapEl.addEventListener('scroll', () => { mapEl.scrollTop = 0; mapEl.scrollLeft =
 let W = 1, H = 1, view = { x: 0, y: 0, s: 1 };
 let groups = null, legs = {}, overlay = [], veh = null, worldClu = null;
 const INTRO = -999;   // no day chosen: the trip's own card (days can also be numbered below 0)
-let current = INTRO, playing = false, seq = 0, anim = 0, journeyOn = false, cardOpen = true;
+let current = INTRO, playing = false, seq = 0, anim = 0, journeyOn = false, cardOpen = true, cardFull = false;   // cardFull: phones show the day card small until tapped
 let filter = 'all', storyFilter = 'all', popState = null;
 const span = () => W / view.s / DEG;
 const ppdNow = () => view.s * DEG;
@@ -2162,7 +2171,9 @@ function renderCard(anim) {
     const sun = d.sun ? sunTimes(d.date, T.places[d.sun].lonlat, T.tz) : null;
     const n = d.sun ? T.stories.filter(s => s.where === d.sun).length : 0;
     const isToday = sun && d.date === todayDate(), cd = isToday ? sunCountdown(sun) : '', xtra = d.final ? '' : dayExtras(d);
-    html = `<div class="ctl"><button type="button" data-cardclose aria-label="${L.close}">${ic('x')}</button></div>
+    cls += cardFull ? ' full' : ' mini';
+    const more = lang === 'he' ? (cardFull ? 'פחות פרטים' : 'עוד פרטים') : (cardFull ? 'Fewer details' : 'More details');
+    html = `<div class="ctl"><button type="button" class="cmore" data-cardmore aria-expanded="${cardFull}" aria-label="${more}" title="${more}">${ic('next')}</button><button type="button" data-cardclose aria-label="${L.close}">${ic('x')}</button></div>
       <div class="c"><div class="hd"><span class="dl">${esc(c.label)}</span><span class="dd">${esc(dateLabel(d.date))}</span></div>
       <h3>${esc(c.title)}</h3>${d.final ? '' : `<p>${esc(c.text)}</p>`}${myFlightsHTML(d)}${byeHTML(d)}
       <div class="ft">${c.stay ? `<span>${ic('bed')}${esc(c.stay)}</span>` : ''}${sun ? `<span class="sun" title="${L.rise} / ${L.set}">${ic('rise')}${sun.rise}<span class="sr">${L.rise}</span> ${ic('set')}${sun.set}<span class="sr">${L.set}</span></span>` : ''}${cd ? `<span class="sunin">${ic('sun')}<span>${esc(cd)}</span></span>` : ''}</div>
@@ -2214,6 +2225,7 @@ dock.addEventListener('click', e => {
   const gt = e.target.closest('[data-goto]'); if (gt) { goto(gt.dataset.goto); return; }
   if (e.target.closest('[data-play]')) { togglePlay(); return; }
   if (e.target.closest('[data-journey]')) { journey(); return; }
+  if (e.target.closest('[data-cardmore]') || (!e.target.closest('button,a') && e.target.closest('.daycard.mini') && matchMedia('(max-width:759px)').matches)) { cardFull = !cardFull; renderCard(); return; }
   if (e.target.closest('[data-cardclose]')) { cardOpen = false; renderCard(); return; }
   const ds = e.target.closest('[data-dstep]');
   if (ds) { setPlaying(false); goDay(clamp(current + Number(ds.dataset.dstep), D0(), D1())); return; }

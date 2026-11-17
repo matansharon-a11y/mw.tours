@@ -60,6 +60,21 @@
       "end": "2026-12-17",
       "cover": "iceland/photos/reynisdrangar.jpg",
       "slug": "iceland-2026"
+    },
+    {
+      "path": "ladakh/",
+      "title": {
+        "en": "Snow Leopards of Ladakh",
+        "he": "נמרי השלג של לדאק"
+      },
+      "place": {
+        "en": "Ladakh, India",
+        "he": "לדאק, הודו"
+      },
+      "start": "2027-01-11",
+      "end": "2027-01-21",
+      "cover": "ladakh/photos/snow-leopard.jpg",
+      "slug": "ladakh-2027"
     }
   ]
 }
