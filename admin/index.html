@@ -95,7 +95,10 @@ textarea:focus{outline:none;border-color:var(--gold)}
 .lnk{border:0;background:none;padding:0;color:var(--gold,#F4AF56);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .who{color:var(--paper);font-weight:700;text-decoration:underline;text-decoration-color:rgba(244,175,86,.6);text-underline-offset:3px}
 .who:hover{color:var(--gold)}
+.flbtn{display:block;margin-top:6px;padding:5px 11px;border-radius:64px;border:1px solid rgba(244,175,86,.5);background:none;color:var(--gold-soft,#E4AA7C);font:600 12px/1.2 inherit;font-family:inherit;cursor:pointer;white-space:nowrap}
+.flbtn:hover{border-color:var(--gold)}
 .fls{display:grid;gap:2px;margin-top:6px}
+.fls[hidden]{display:none}
 .fl{font-size:12.5px;color:var(--muted);white-space:nowrap}
 .fl b{color:var(--paper);font-weight:600}
 .st{font:600 10.5px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
@@ -206,7 +209,7 @@ const fday = iso => iso ? new Date(iso + 'T12:00:00').toLocaleDateString('en-GB'
 function flightsHTML(m) {
   const f = m && flightsBy && flightsBy[m.id];
   if (!f || !f.length) return '';
-  return '<span class="fls">' + f.slice().sort((a, b) => ((a.iso || '') + (a.time || '')).localeCompare((b.iso || '') + (b.time || '')))
+  return `<button class="flbtn" type="button" data-fltog aria-expanded="false">See flight details · ${f.length}</button><span class="fls" hidden>` + f.slice().sort((a, b) => ((a.iso || '') + (a.time || '')).localeCompare((b.iso || '') + (b.time || '')))
     .map(r => `<span class="fl">${esc(fday(r.iso))} · <b>${esc(r.from || '')} → ${esc(r.to || '')}</b>${r.time ? ' · ' + esc(r.time) + (r.arrive ? '–' + esc(r.arrive) : '') : ''}${r.flight ? ' · ' + esc(r.flight) : ''}</span>`).join('') + '</span>';
 }
 let lastPhotos = [];
@@ -280,6 +283,12 @@ $('#tours').addEventListener('click', async e => {
       if (error) throw error;
       say(msg, 'Connected.', 'ok'); await load();
     } catch (err) { btn.disabled = false; say(msg, 'Could not save: ' + (err.message || err), 'err'); }
+  }
+  if (btn.matches('[data-fltog]')) {
+    const box = btn.nextElementSibling, open = box.hidden;
+    box.hidden = !open; btn.setAttribute('aria-expanded', open);
+    btn.textContent = (open ? 'Hide flight details · ' : 'See flight details · ') + box.children.length;
+    return;
   }
   if (btn.matches('[data-chcode]')) {
     btn.closest('.menu').hidden = true;
