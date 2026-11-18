@@ -95,6 +95,9 @@ textarea:focus{outline:none;border-color:var(--gold)}
 .lnk{border:0;background:none;padding:0;color:var(--gold,#F4AF56);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .who{color:var(--paper);font-weight:700;text-decoration:underline;text-decoration-color:rgba(244,175,86,.6);text-underline-offset:3px}
 .who:hover{color:var(--gold)}
+.fls{display:grid;gap:2px;margin-top:6px}
+.fl{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.fl b{color:var(--paper);font-weight:600}
 .st{font:600 10.5px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
 .st.in{color:var(--leaf)} .st.wait{color:var(--faint)} .st.extra{color:var(--amber)}
 .zoom{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(5,5,4,.92);cursor:zoom-out}
@@ -137,7 +140,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const norm = c => String(c || '').toUpperCase().replace(/[\s\-–_.]/g, '');
 const fmt = d => d ? new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–';
 const sb = window.supabase.createClient(CFG.url, CFG.key, { auth: { persistSession: true, storageKey: 'mw-admin-session', detectSessionInUrl: false } });
-let list = [], urls = {}, openAdd = null;
+let list = [], urls = {}, openAdd = null, flightsBy = null;
 
 // check a code really opens an expedition page (same lock the pages use: PBKDF2-SHA256 → AES-GCM)
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -156,6 +159,9 @@ async function load() {
   ]);
   if (ov.error) { $('#app').hidden = true; $('#login').hidden = false; $('#out').hidden = false; say($('#lmsg'), /not_admin/.test(ov.error.message) ? 'This login is not an expedition admin yet. Run the "make Matan an admin" query from the setup file.' : 'Could not load: ' + ov.error.message, 'err'); return; }
   const db = Object.fromEntries((ov.data || []).map(t => [t.slug, t]));
+  // each traveler's own flights (needs supabase-update-admin-flights.txt; null = not run yet)
+  const fl = await sb.rpc('admin_flights');
+  flightsBy = fl.error ? null : Object.fromEntries((fl.data || []).map(r => [r.member_id, Array.isArray(r.flights) ? r.flights : []]));
   const today = new Date().toISOString().slice(0, 10);
   const when = t => t.end && today > t.end ? 'past' : t.start && today >= t.start ? 'now' : 'soon';
   const rank = { now: 0, soon: 1, past: 2 };
@@ -181,6 +187,7 @@ async function checkSetup(tours) {
       todo.push('<b>Turn on anonymous sign-ins.</b> Supabase → Authentication → Sign In / Providers → "Allow anonymous sign-ins" → Save. Without it, travelers open the expedition but are never registered, so they don\u2019t appear here.');
   } catch (e) {}
   if (tours.some(t => t.ready && !('code_edit' in t))) todo.push('<b>Run supabase-update-change-code.txt</b> in Supabase → SQL Editor, to change an expedition\u2019s code here.');
+  if (flightsBy === null) todo.push('<b>Run supabase-update-admin-flights.txt</b> in Supabase → SQL Editor, to see each traveler\u2019s flights here.');
   if (tours.length && !('travelers' in tours[0])) todo.push('<b>Run supabase-update-travelers.txt</b> in Supabase → SQL Editor (the traveler list).');
   const v = await sb.rpc('admin_view_member', { p_member: '00000000-0000-0000-0000-000000000000' });
   if (v.error && /function|schema cache/i.test(v.error.message)) todo.push('<b>Run supabase-update-view-as.txt</b> in Supabase → SQL Editor (opening a traveler\u2019s view).');
@@ -194,6 +201,14 @@ async function checkSetup(tours) {
   box.hidden = !todo.length;
 }
 
+// a traveler's own flights, one line each: date · route · times · flight no.
+const fday = iso => iso ? new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+function flightsHTML(m) {
+  const f = m && flightsBy && flightsBy[m.id];
+  if (!f || !f.length) return '';
+  return '<span class="fls">' + f.slice().sort((a, b) => ((a.iso || '') + (a.time || '')).localeCompare((b.iso || '') + (b.time || '')))
+    .map(r => `<span class="fl">${esc(fday(r.iso))} · <b>${esc(r.from || '')} → ${esc(r.to || '')}</b>${r.time ? ' · ' + esc(r.time) + (r.arrive ? '–' + esc(r.arrive) : '') : ''}${r.flight ? ' · ' + esc(r.flight) : ''}</span>`).join('') + '</span>';
+}
 let lastPhotos = [];
 // a browser that has opened an expedition keeps its code (mw-tour-<slug>-code): offer it, so nothing has to be typed
 const saved = slug => { try { return localStorage.getItem('mw-tour-' + slug + '-code') || ''; } catch (e) { return ''; } };
@@ -233,7 +248,7 @@ function render(photos) {
       <div class="trh"><h3>Travelers · ${trav.length}</h3>${ready ? `<button class="plus" type="button" data-plus aria-label="Add a traveler" title="Add a traveler"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg></button>` : ''}</div>
       ${ready ? `<form class="add" data-addform ${openAdd === t.slug ? '' : 'hidden'}><input data-names type="text" placeholder="Full name (English)" autocomplete="off" spellcheck="false" aria-label="Traveler's full name"><input data-other type="text" dir="auto" placeholder="Name in another language (optional)" autocomplete="off" spellcheck="false" aria-label="The same name in another language"><button class="btn small" type="submit">Add</button></form>` : ''}
       ${rows.length ? `<div class="tbl"><table><thead><tr><th>Name</th><th>Status</th><th>Last active</th><th>Photos</th><th></th></tr></thead><tbody>
-        ${rows.map(x => `<tr><td><a class="who" href="../${esc(t.path)}?as=${esc(x.m ? x.m.id : x.t.id)}" target="_blank" rel="noopener" title="Open ${esc(x.name)}'s view">${esc(x.name)}</a>${x.t && (x.t.other_names || []).length ? `<span class="alt"><bdi>${esc(x.t.other_names.join(' · '))}</bdi></span>` : ''}</td>
+        ${rows.map(x => `<tr><td><a class="who" href="../${esc(t.path)}?as=${esc(x.m ? x.m.id : x.t.id)}" target="_blank" rel="noopener" title="Open ${esc(x.name)}'s view">${esc(x.name)}</a>${x.t && (x.t.other_names || []).length ? `<span class="alt"><bdi>${esc(x.t.other_names.join(' · '))}</bdi></span>` : ''}${flightsHTML(x.m)}</td>
           <td><span class="st ${x.m ? (x.t ? 'in' : 'extra') : 'wait'}">${x.m ? (x.t ? 'Joined' : 'Not on list') : 'Not joined yet'}</span></td>
           <td>${x.m ? fmt(x.m.last_seen) : '–'}</td><td>${x.m ? x.m.photos : '–'}</td>
           <td class="mn"><button class="dots" type="button" data-menu aria-label="More for ${esc(x.name)}" title="More"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>

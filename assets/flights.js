@@ -40,12 +40,12 @@ const W = {
         from: 'מ-', to: 'אל', date: 'תאריך', dep: 'המראה', arr: 'נחיתה', no: 'מספר טיסה (לא חובה)', pick: 'עיר או שדה תעופה',
         clearT: 'ניקוי', done: 'אישור', add: '+ טיסה', save: 'שמירה', cancel: 'ביטול', del: 'הסרה', clear: 'מחיקת כל הטיסות', clearQ: 'למחוק את כל הטיסות שלכם?',
         need: 'בכל טיסה צריך תאריך, ושדה תעופה ב-מ- וב-אל מתוך הרשימה.', none: 'לא נמצא שדה תעופה. נסו שם עיר או קוד של שלוש אותיות.',
-        loadErr: 'רשימת שדות התעופה לא נטענה. בדקו את החיבור ונסו שוב.', privacy: 'רק אתם רואים את הטיסות שלכם.' },
+        loadErr: 'רשימת שדות התעופה לא נטענה. בדקו את החיבור ונסו שוב.', privacy: 'רק אתם ומתן רואים את הטיסות שלכם.' },
   en: { title: 'Your flights', intro: 'Add each flight, from home to the expedition and back. In From and To type a city, country or airport code, then pick from the list.',
         from: 'From', to: 'To', date: 'Date', dep: 'Departs', arr: 'Lands', no: 'Flight no. (optional)', pick: 'City or airport',
         clearT: 'Clear', done: 'Done', add: '+ Flight', save: 'Save', cancel: 'Cancel', del: 'Remove', clear: 'Delete all flights', clearQ: 'Delete all your flights?',
         need: 'Each flight needs a date, and a From and To airport picked from the list.', none: 'No airport found. Try a city name or a three-letter code.',
-        loadErr: "The airport list didn't load. Check your connection and try again.", privacy: 'Only you see your flights.' },
+        loadErr: "The airport list didn't load. Check your connection and try again.", privacy: 'Only you and Matan see your flights.' },
 };
 const words = () => W[(document.documentElement.lang || 'he').startsWith('en') ? 'en' : 'he'];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

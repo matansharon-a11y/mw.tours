@@ -753,3 +753,17 @@ grant execute on function public.admin_set_tour(text, text, text, text), public.
 -- 7. PHOTOS ON THE STORIES CARDS TOO (same as supabase-update-story-photos.txt)
 alter table public.photos drop constraint if exists photos_item_kind_check;
 alter table public.photos add constraint photos_item_kind_check check (item_kind in ('animal', 'exercise', 'story'));
+
+-- =====================================================================
+-- 8. THE ADMIN SEES EACH TRAVELER'S FLIGHTS (same as supabase-update-admin-flights.txt)
+create or replace function public.admin_flights() returns json
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_tour_admin() then raise exception 'not_admin'; end if;
+  return coalesce((
+    select json_agg(json_build_object('member_id', m.id, 'tour_slug', m.tour_slug, 'flights', (p.state->>'flights')::jsonb))
+      from public.progress p join public.members m on m.id = p.member_id
+     where coalesce(p.state->>'flights', '') ~ '^\s*\[' and (p.state->>'flights')::jsonb <> '[]'::jsonb), '[]'::json);
+end $$;
+revoke execute on function public.admin_flights() from public, anon;
+grant execute on function public.admin_flights() to authenticated;

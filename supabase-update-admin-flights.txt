@@ -1,0 +1,19 @@
+-- =====================================================================
+-- MW Photo Tours · update: the admin page shows each traveler's flights
+-- Supabase → SQL Editor → New query → paste this whole file → Run. Safe to run more than once.
+--
+-- Flights travelers add are kept in their own progress (state.flights, a JSON list). Only the admin can read
+-- them through this function; other travelers still can't. The tour pages now say "Only you and Matan see them".
+-- =====================================================================
+
+create or replace function public.admin_flights() returns json
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_tour_admin() then raise exception 'not_admin'; end if;
+  return coalesce((
+    select json_agg(json_build_object('member_id', m.id, 'tour_slug', m.tour_slug, 'flights', (p.state->>'flights')::jsonb))
+      from public.progress p join public.members m on m.id = p.member_id
+     where coalesce(p.state->>'flights', '') ~ '^\s*\[' and (p.state->>'flights')::jsonb <> '[]'::jsonb), '[]'::json);
+end $$;
+revoke execute on function public.admin_flights() from public, anon;
+grant execute on function public.admin_flights() to authenticated;
