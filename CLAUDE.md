@@ -41,6 +41,8 @@ commit finished work straight to `main`; there is no build step.
 - Facts row (Length, Group size…): round gold-edged icon rings, icon centred (`.fact .ring`; the text rule is `.fact>div>span`).
 - Leader role line: "Expedition leader, founder of MW Photo Tours" (`leader.role`), on every expedition.
 - Leader room: no "behind the scenes" photo/caption (`leader.band` is ignored); bio and story in one column.
+- Leader: optional `leader.web` adds a third button (globe) beside WhatsApp and Instagram; its label is "Website" unless the
+  vault sets `ui.<lang>.l.web` (Ladakh: Matan's digital business card, contactmatan.mw.photography, "My business card", 18.11.2026).
 - Leader: optional `leader.story` {he, en: {kicker, by, text[]}}, shown in the text column beside the photo.
 - Two or more leaders: vault `leaders: [{name, role, photo, roles, bio, story, wa, waText, phone, email, instagram,
   facebook, web}]` turns the Leader room into one expandable card each (`leaderCards`), with that leader's details,

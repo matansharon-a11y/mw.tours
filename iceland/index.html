@@ -2650,7 +2650,8 @@ function renderLeader() {
     ${ld.story && ld.story[lang] ? `<article class="lstory"><p class="lbl">${esc(ld.story[lang].kicker || '')}</p>${ld.story[lang].title ? `<h3>${esc(ld.story[lang].title)}</h3>` : ''}${ld.story[lang].by ? `<p class="by">${esc(ld.story[lang].by)}</p>` : ''}${ld.story[lang].text.map(t => `<p class="t">${esc(t)}</p>`).join('')}</article>` : ''}</div>
     <section class="contact" style="--i:4"><h3 style="margin:0;font-size:24px;color:var(--bark)">${esc(l.contact)}</h3>
       <div class="acts"><a class="btn wa" href="${wa}" target="_blank" rel="noopener">${ic('wa')}<span>${esc(l.wa)}</span></a>
-        <a class="btn" href="${esc(ld.instagram)}" target="_blank" rel="noopener">${ic('ig')}<span>${esc(l.ig)}</span></a></div>
+        <a class="btn" href="${esc(ld.instagram)}" target="_blank" rel="noopener">${ic('ig')}<span>${esc(l.ig)}</span></a>${ld.web ? `
+        <a class="btn" href="${esc(ld.web)}" target="_blank" rel="noopener">${ic('globe')}<span>${esc(l.web)}</span></a>` : ''}</div>
       <div>
         <div class="cline"><b>${esc(l.phone)}</b><span>${esc(ld.phone)}</span><button class="btn small" type="button" data-copy="${esc(ld.phone)}">${ic('copy')}<span>${esc(l.copy)}</span></button></div>
         <div class="cline"><b>${esc(l.mail)}</b><span>${esc(ld.email)}</span><button class="btn small" type="button" data-copy="${esc(ld.email)}">${ic('copy')}<span>${esc(l.copy)}</span></button></div>
