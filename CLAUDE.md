@@ -82,7 +82,9 @@ commit finished work straight to `main`; there is no build step.
   cities, LL, iso, time, arrive, flight). They act like the traveler's own (map, day-by-day, list, calendar) without the
   pencil; a typed copy shows once. Manas uses this (EY 596 + EY 216 on 31.10 for both personal groups; Hadar, Matan, Esther also EY 217 DEL→AUH 11.11 and EY 101 AUH→MAD 12.11);
   Iceland has one personal entry, for Matan only (names "Matan Sharon"/"Matan Wild"/"מתן שרון"/"מתן ווילד", all the same Matan; LY 337 TLV→AMS + FI 501 AMS→KEF 08.12,
-  FI 454 KEF→LHR + LY 318 LHR→TLV 17.12, added 19.10.2026). Other travelers, and other expeditions, add their own.
+  FI 454 KEF→LHR + LY 318 LHR→TLV 17.12, added 19.10.2026);
+  Ladakh has one personal entry, for Matan only (same four names; AI 140 TLV→DEL 10.01, AI 2463 DEL→IXL 11.01,
+  AI 2464 IXL→DEL 20.01, AI 139 DEL→TLV 21.01, added 18.11.2026). Other travelers, and other expeditions, add their own.
   Each flight has a small pencil that opens the sheet on that row.
   Flights shape the map (`withTickets`, rebuilt from `RAW` + `buildMap()` on save): each flight becomes a flight line
   between its airports (new airport places `u-<code>`), and the group's own flight lines are dropped on the days of the
