@@ -75,6 +75,21 @@
       "end": "2027-01-21",
       "cover": "ladakh/photos/snow-leopard.jpg",
       "slug": "ladakh-2027"
+    },
+    {
+      "path": "kerkini/",
+      "title": {
+        "en": "Dalmatian Pelicans at Lake Kerkini",
+        "he": "שקנאים בקרקיני"
+      },
+      "place": {
+        "en": "Lake Kerkini, Greece",
+        "he": "אגם קרקיני, יוון"
+      },
+      "start": "2027-02-11",
+      "end": "2027-02-14",
+      "cover": "kerkini/photos/pelicans-sunset.jpg",
+      "slug": "kerkini-2027"
     }
   ]
 }

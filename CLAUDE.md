@@ -8,7 +8,7 @@ commit finished work straight to `main`; there is no build step.
 - `index.html`: landing page ("Which expedition are you joining?"), lists the tours from `tours.json`.
 - `tours.json`: one entry per expedition: `path` (folder), `slug` (the id inside that page's
   `<script id="vault">`), `title`/`place` in `en` and `he`, `start`/`end` (YYYY-MM-DD), `cover`.
-- `<tour>/index.html` (`manas-kaziranga/`, `iberian-lynx/`, `pyrenees/`, `iceland/`, `ladakh/`): one expedition each, with its
+- `<tour>/index.html` (`manas-kaziranga/`, `iberian-lynx/`, `pyrenees/`, `iceland/`, `ladakh/`, `kerkini/`): one expedition each, with its
   own `img/`, `map/`, `photos/`. The trip content is encrypted in `<script id="vault">` with the
   expedition code (PBKDF2 + AES-GCM); never try to read or guess codes, and never write a code into a file.
 - `assets/members.js`: loaded by every tour. Traveler name on the code screen, Supabase sync of lists and
