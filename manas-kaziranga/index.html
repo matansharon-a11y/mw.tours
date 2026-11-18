@@ -694,6 +694,8 @@ body.lite #flowsvg .flow,body.lite .spot i::after,body.lite .mk.here .dot::befor
 .phr .w b{font-size:16px;color:var(--paper)}
 .phr .w span{font-size:14px;color:var(--muted)}
 .phr .w .as{grid-row:span 2;align-self:center;font-size:20px;color:var(--gold-soft)}
+.phr .w.solo{grid-template-columns:minmax(0,1fr)}
+.phr .w.solo b{justify-self:start;font-size:18px;color:var(--gold-soft)}
 .phr .w small{font-size:13px;color:var(--faint);direction:ltr;text-align:start}
 [dir=rtl] .phr .w small{text-align:end}
 
@@ -2508,7 +2510,7 @@ function renderInfo() {
   }).join('');
   const P = T.phrases;
   const phr = P ? `<section class="ess" id="ess-phrases"><div class="bh"><span class="ring">${ic('chat')}</span><h3>${esc(P[lang].title)}</h3></div><p class="intro">${esc(P[lang].intro)}</p>
-    <div class="phr">${P.words.map(w => `<div class="w"><b dir="ltr">${esc(w.lat)}</b><span class="as" lang="as">${esc(w.as)}</span><span>${lang === 'he' ? `${esc(w.he[1])} · ${esc(w.he[0])}` : esc(w.en)}</span></div>`).join('')}</div></section>` : '';
+    <div class="phr">${P.words.map(w => `<div class="w${w.as ? '' : ' solo'}"><b dir="ltr">${esc(w.lat)}</b><span class="as" lang="as">${esc(w.as)}</span><span>${lang === 'he' ? `${esc(w.he[1])} · ${esc(w.he[0])}` : esc(w.en)}</span></div>`).join('')}</div></section>` : '';
   const inst = `<section class="ess" id="ess-install"><div class="bh"><span class="ring">${ic('phone')}</span><h3>${esc(I.install.title)}</h3></div><ul>${I.install.text.map(t => `<li>${esc(t)}</li>`).join('')}</ul></section>`;
   $('#info').innerHTML = heroHTML('info', I.kicker, I.title, I.lede, qa) + `<div class="wrap">
     <div class="clocks" id="blk-time" style="--i:0"><div class="clock"><span>${esc(I.here)}</span><b id="clk-il">--:--</b></div><div class="clock"><span>${esc(I.there)}</span><b id="clk-as">--:--</b><small id="clk-diff"></small></div></div>
