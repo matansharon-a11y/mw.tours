@@ -116,3 +116,11 @@ commit finished work straight to `main`; there is no build step.
 - A new expedition: copy an existing tour folder as the template, give it its own vault/maps/photos,
   add it to `tours.json` with its `slug`, then Matan connects it once in `/admin`.
 - Pages are Hebrew-first with English; check both and phone width before pushing.
+
+## Offline (in the field without signal)
+- Each tour folder has `sw.js` (one line: `importScripts('../assets/sw-core.js')`); the page registers it. A new tour needs its own `sw.js`.
+- `assets/sw-core.js`: the page from the network when there is signal and from the phone without; pictures, map layers, fonts and
+  scripts from the phone first (unversioned files refreshed quietly); group shots kept once seen; other Supabase calls always online.
+- `members.js` `keepOffline()`: once the expedition is open (and online), sends every map layer, photo, thumbnail and font the page uses,
+  so the whole expedition opens later without signal. Bump `V` in sw-core.js to drop everything saved before.
+

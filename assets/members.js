@@ -629,6 +629,18 @@ async function asView() {
     decorate(true); loadPhotos();
   } catch (e) { asNone(w.asFail); }
 }
+// ---------- offline: once the expedition is open, keep everything it uses on the phone (assets/sw-core.js) ----------
+// The map layers come from the page's map block; photos, thumbnails and icons from everything the rooms have drawn.
+function keepOffline() {
+  if (AS || gateOpen() || !('serviceWorker' in navigator) || !navigator.onLine) return;
+  const urls = new Set(), add = u => { try { urls.add(new URL(u, location.href).href); } catch (e) {} };
+  try { (JSON.parse($('#geo').textContent).images || []).forEach(i => add(i.src)); } catch (e) {}
+  const html = document.documentElement.outerHTML;
+  for (const m of html.matchAll(/(?:src|href|srcset|data-[\w-]+)="([^"\s]+?\.(?:jpe?g|webp|png|svg|woff2|css|js)(?:\?v=[\w.]+)?)"|url\(['"]?([^'")\s]+?\.(?:jpe?g|webp|png|svg|woff2))['"]?\)/g)) add(m[1] || m[2]);
+  ['../assets/fonts/heebo-hebrew.woff2', '../assets/fonts/google-sans-latin.woff2', '../assets/fonts/google-sans-latin-ext.woff2',
+   '../assets/airports.js?v=1', 'sw.js'].forEach(add);
+  navigator.serviceWorker.ready.then(reg => reg.active && reg.active.postMessage({ type: 'mw-keep', urls: [...urls] })).catch(() => {});
+}
 function boot() {
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   document.body.appendChild(picker);
@@ -641,6 +653,8 @@ function boot() {
   decorate(false); setTimeout(() => decorate(false), 1500);
   new MutationObserver(relabel).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   whoBadge(); resume();
+  setTimeout(keepOffline, 8000); setTimeout(keepOffline, 40000);
+  addEventListener('online', () => setTimeout(keepOffline, 5000));
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
