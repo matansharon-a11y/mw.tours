@@ -217,8 +217,9 @@ function render(photos) {
         <span class="pill ${ready ? 'on' : 'off'}">${ready ? 'Connected' : 'Not connected'}</span></span></div>
 
       <h3>${ready ? 'Expedition code' : 'Connect this expedition'}</h3>
-      ${ready ? `<div class="codebox">${d.code ? `<span class="codeval">${esc(d.code)}</span><button class="btn ghost small" type="button" data-copy="${esc(d.code)}">Copy</button>`
-            : '<span class="hint">Connected. Run the "show code" update in Supabase to see the code here.</span>'}${d.code_edit ? '<button class="btn ghost small" type="button" data-chcode>Change code</button>' : ''}</div>
+      ${ready ? `<div class="codebox">${d.code ? `<span class="codeval">${esc(d.code)}</span>`
+            : '<span class="hint">Connected. Run the "show code" update in Supabase to see the code here.</span>'}${d.code || d.code_edit ? `<span class="mn"><button class="dots" type="button" data-menu aria-label="More for the code" title="More"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+              <div class="menu" hidden>${d.code ? `<button type="button" data-copy="${esc(d.code)}">Copy code</button>` : ''}${d.code_edit ? '<button type="button" data-chcode>Change code</button>' : ''}</div></span>` : ''}</div>
         ${d.code_edit ? `<form class="row one" data-codeform hidden><label>New code for this expedition<input class="code" data-newcode spellcheck="false" autocapitalize="characters" autocomplete="off" placeholder="e.g. MWP-LADAKH"></label>
           <span class="codebox"><button class="btn" type="submit">Save code</button><button class="btn ghost" type="button" data-cancelcode>Cancel</button></span>
           <p class="hint" style="grid-column:1/-1">The old code stops working right away. Travelers who already joined stay signed in; new sign-ins use the new code.</p></form>` : ''}
@@ -266,13 +267,15 @@ $('#tours').addEventListener('click', async e => {
     } catch (err) { btn.disabled = false; say(msg, 'Could not save: ' + (err.message || err), 'err'); }
   }
   if (btn.matches('[data-chcode]')) {
+    btn.closest('.menu').hidden = true;
     const f = card.querySelector('[data-codeform]'); f.hidden = !f.hidden;
     if (!f.hidden) f.querySelector('input').focus();
     return;
   }
   if (btn.matches('[data-cancelcode]')) { const f = card.querySelector('[data-codeform]'); f.hidden = true; f.reset(); say(msg, ''); return; }
   if (btn.matches('[data-copy]')) {
-    try { await navigator.clipboard.writeText(btn.dataset.copy); btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); } catch (e) {}
+    btn.closest('.menu').hidden = true;
+    try { await navigator.clipboard.writeText(btn.dataset.copy); say(msg, 'Code copied.', 'ok'); setTimeout(() => say(msg, ''), 2000); } catch (e) { say(msg, 'Could not copy. Select the code and copy it.', 'err'); }
     return;
   }
   if (btn.matches('[data-plus]')) {
