@@ -84,7 +84,8 @@ commit finished work straight to `main`; there is no build step.
   Iceland has one personal entry, for Matan only (names "Matan Sharon"/"Matan Wild"/"מתן שרון"/"מתן ווילד", all the same Matan; LY 337 TLV→AMS + FI 501 AMS→KEF 08.12,
   FI 454 KEF→LHR + LY 318 LHR→TLV 17.12, added 19.10.2026);
   Ladakh has one personal entry, for Matan only (same four names; AI 140 TLV→DEL 10.01, AI 2463 DEL→IXL 11.01,
-  AI 2464 IXL→DEL 20.01, AI 139 DEL→TLV 21.01, added 18.11.2026). Other travelers, and other expeditions, add their own.
+  AI 2464 IXL→DEL 20.01, AI 139 DEL→TLV 21.01, added 18.11.2026);
+  Kerkini the same (IZ 223 TLV→SKG 11.02, IZ 224 SKG→TLV 14.02, added 18.11.2026). Other travelers, and other expeditions, add their own.
   Each flight has a small pencil that opens the sheet on that row.
   Flights shape the map (`withTickets`, rebuilt from `RAW` + `buildMap()` on save): each flight becomes a flight line
   between its airports (new airport places `u-<code>`), and the group's own flight lines are dropped on the days of the
