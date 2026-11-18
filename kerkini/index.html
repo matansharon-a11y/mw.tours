@@ -1075,8 +1075,8 @@ const buildTrip = () => spreadDays(withTickets(markLast(personalize(structuredCl
 // first day or after the last one adds a day of its own, so the dates on the map follow their ticket
 function withTickets(t) {
   let rows = [];
-  // the traveler's own typed flights (private, also from the admin's view) …
-  if (!window.MW_AS) try { const a = JSON.parse(store.get('mw-tour-' + t.slug + '-flights') || 'null'), me = meId(); if (Array.isArray(a)) rows = a.filter(r => r && r.by === me && r.v === 3 && /^\d{4}-\d\d-\d\d$/.test(r.iso || '') && r.fromLL && r.toLL); } catch (e) {}
+  // the traveler's own typed flights (only theirs, and the admin's view of them) …
+  try { const a = JSON.parse(store.get('mw-tour-' + t.slug + '-flights') || 'null'), me = meId(); if (Array.isArray(a)) rows = a.filter(r => r && r.by === me && r.v === 3 && /^\d{4}-\d\d-\d\d$/.test(r.iso || '') && r.fromLL && r.toLL); } catch (e) {}
   // … and the flights Matan already has for them (vault personal patch "tickets", same shape), unless typed again
   rows = rows.concat((t.tickets || []).filter(p => p.iso && p.fromLL && p.toLL && !rows.some(r => r.iso === p.iso && r.from === p.from && r.to === p.to)));
   if (!rows.length) return t;
@@ -2421,7 +2421,7 @@ const canTicket = () => !inViewer && !window.MW_AS;
 // each saved flight carries who added it, and only that traveler sees it (a shared phone or an old copy never shows
 // someone else's flights)
 function meId() { try { const m = JSON.parse(store.get(KEY + '-member') || 'null'); return m && m.id ? String(m.id) : 'local'; } catch (e) { return 'local'; } }
-function myTickets() { if (window.MW_AS) return null; try { const a = JSON.parse(store.get(FLKEY) || 'null'), me = meId(); const own = Array.isArray(a) ? a.filter(r => r && r.by === me && r.v === 3) : []; return own.length ? own : null; } catch (e) { return null; } }
+function myTickets() { try { const a = JSON.parse(store.get(FLKEY) || 'null'), me = meId(); const own = Array.isArray(a) ? a.filter(r => r && r.by === me && r.v === 3) : []; return own.length ? own : null; } catch (e) { return null; } }
 // someone else's flights left in this browser's copy (or an untagged copy from before) are removed from it, and the
 // cleaned copy is what syncs back to this traveler's account
 function cleanTickets() {

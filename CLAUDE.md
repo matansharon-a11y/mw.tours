@@ -72,7 +72,7 @@ commit finished work straight to `main`; there is no build step.
   flight no. optional; times: one field each that opens hour (00–23) / minute scroll wheels; 24-hour everywhere,
   e.g. 13:05). No file reading any more (ticket upload was removed 12.10.2026). Rows are kept in
   `mw-tour-<slug>-flights` with each airport's code, city and lonlat, synced to the traveler's own account; private from other travelers. The admin page lists each
-  traveler's flights under their name (`admin_flights()`, `supabase-update-admin-flights.txt`); pages say "Only you and Matan see them". The Flights block (`flightRows()`) always lists the tour's own flights inside its
+  traveler's flights under their name, and the admin's view-as shows them in that traveler's Essentials (read only, no +) (`admin_flights()`, `supabase-update-admin-flights.txt`); pages say "Only you and Matan see them". The Flights block (`flightRows()`) always lists the tour's own flights inside its
   area (vault `flights.rows` with both `from` and `to`, e.g. Manas DEL→GAU / GAU→DEL, personal patches applied) plus the
   traveler's own, merged and sorted by date (a typed copy of a tour flight shows once); "Add to calendar" exports them all.
   Each row: date + weekday, departure time with → arrival under it, route codes, flight no. as a pill (all in the one
