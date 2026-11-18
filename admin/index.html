@@ -73,6 +73,7 @@ td b{color:var(--paper);font-weight:700}
 textarea{width:100%;min-height:96px;padding:12px 16px;border-radius:14px;border:1px solid rgba(254,251,241,.28);background:rgba(10,9,8,.45);color:var(--paper);font:16px/1.5 var(--sans);resize:vertical}
 textarea:focus{outline:none;border-color:var(--gold)}
 [data-msg]:empty{display:none}
+.trb{display:flex;align-items:center;gap:10px}
 .trh{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px}
 .plus{display:grid;place-items:center;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid var(--gold);background:radial-gradient(130% 160% at 0 0,rgba(244,175,86,.24),transparent 46%);cursor:pointer}
 .plus svg{width:18px;height:18px;fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round}
@@ -95,7 +96,7 @@ textarea:focus{outline:none;border-color:var(--gold)}
 .lnk{border:0;background:none;padding:0;color:var(--gold,#F4AF56);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .who{color:var(--paper);font-weight:700;text-decoration:underline;text-decoration-color:rgba(244,175,86,.6);text-underline-offset:3px}
 .who:hover{color:var(--gold)}
-.flbtn{display:block;margin-top:6px;padding:5px 11px;border-radius:64px;border:1px solid rgba(244,175,86,.5);background:none;color:var(--gold-soft,#E4AA7C);font:600 12px/1.2 inherit;font-family:inherit;cursor:pointer;white-space:nowrap}
+.flbtn{display:inline-block;vertical-align:middle;margin-inline-start:10px;padding:4px 10px;border-radius:64px;border:1px solid rgba(244,175,86,.5);background:none;color:var(--gold-soft,#E4AA7C);font:600 12px/1.2 inherit;font-family:inherit;cursor:pointer;white-space:nowrap}
 .flbtn:hover{border-color:var(--gold)}
 .fls{display:grid;gap:2px;margin-top:6px}
 .fls[hidden]{display:none}
@@ -216,7 +217,7 @@ const fday = iso => iso ? new Date(iso + 'T12:00:00').toLocaleDateString('en-GB'
 function flightsHTML(m) {
   const f = m && flightsBy && flightsBy[m.id];
   if (!f || !f.length) return '';
-  return `<button class="flbtn" type="button" data-fltog data-name="${esc(m.name)}" aria-haspopup="dialog">See flight details · ${f.length}</button><span class="fls" hidden>` + f.slice().sort((a, b) => ((a.iso || '') + (a.time || '')).localeCompare((b.iso || '') + (b.time || '')))
+  return `<button class="flbtn" type="button" data-fltog data-name="${esc(m.name)}" aria-haspopup="dialog" title="See flight details">Flight details · ${f.length}</button><span class="fls" hidden>` + f.slice().sort((a, b) => ((a.iso || '') + (a.time || '')).localeCompare((b.iso || '') + (b.time || '')))
     .map(r => `<span class="fl">${esc(fday(r.iso))} · <b>${esc(r.from || '')} → ${esc(r.to || '')}</b>${r.time ? ' · ' + esc(r.time) + (r.arrive ? '–' + esc(r.arrive) : '') : ''}${r.flight ? ' · ' + esc(r.flight) : ''}</span>`).join('') + '</span>';
 }
 // a traveler's flights in a small window, closed with × (or Escape, or a tap outside)
@@ -230,6 +231,56 @@ function showFlights(name, rows, from) {
   v.addEventListener('click', e => { if (e.target === v) close(); });
   addEventListener('keydown', key);
   document.body.appendChild(v); v.querySelector('.flx').focus();
+}
+// all of an expedition's travelers and their flights as one picture (to send on), in the site's colours
+async function flightsPNG(t, btn) {
+  const d = t.db || {}, mem = d.members || [], trav = d.travelers || [];
+  const people = trav.map(r => ({ name: r.name, other: (r.other_names || []).join(' · '), m: mem.find(m => m.traveler_id === r.id) }))
+    .concat(mem.filter(m => !m.traveler_id || !trav.some(r => r.id === m.traveler_id)).map(m => ({ name: m.name, other: '', m })));
+  const rowsOf = p => ((p.m && flightsBy && flightsBy[p.m.id]) || []).slice()
+    .sort((a, b) => ((a.iso || '') + (a.time || '')).localeCompare((b.iso || '') + (b.time || '')));
+  try { await document.fonts.ready; } catch (e) {}
+  const S = 2, W = 1100, P = 56, F = '"MW Sans","Google Sans","MW Hebrew","Helvetica Neue",Arial,sans-serif';
+  const line = r => [fday(r.iso), `${r.from || ''} → ${r.to || ''}`, (r.fromCity || r.toCity) ? `${r.fromCity || ''} → ${r.toCity || ''}` : '',
+    r.time ? r.time + (r.arrive ? '–' + r.arrive : '') : 'Time TBC', r.flight || 'Flight no. TBC'];
+  let H = P + 150;
+  people.forEach(p => { H += 58 + (p.other ? 22 : 0) + Math.max(1, rowsOf(p).length) * 34 + 18; });
+  H += 70;
+  const c = document.createElement('canvas'); c.width = W * S; c.height = H * S;
+  const x = c.getContext('2d'); x.scale(S, S); x.textBaseline = 'alphabetic';
+  x.fillStyle = '#0A0908'; x.fillRect(0, 0, W, H);
+  const g = x.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.8); g.addColorStop(0, 'rgba(18,64,58,.9)'); g.addColorStop(1, 'rgba(10,9,8,0)');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const txt = (s, X, Y, font, col, align) => { x.font = font; x.fillStyle = col; x.textAlign = align || 'left'; x.fillText(s, X, Y); };
+  let y = P + 14;
+  txt('MW PHOTO TOURS · FLIGHTS', P, y, `600 13px ${F}`, '#E4AA7C');
+  y += 44; txt(t.title?.en || t.slug, P, y, `700 32px ${F}`, '#FEFBF1');
+  y += 30; txt(`${t.place?.en || ''} · ${nice(t.start)} – ${nice(t.end)}`, P, y, `400 16px ${F}`, 'rgba(244,244,244,.72)');
+  y += 50;
+  for (const p of people) {
+    x.fillStyle = 'rgba(254,251,241,.14)'; x.fillRect(P, y - 26, W - 2 * P, 1);
+    y += 8; txt(p.name, P, y, `700 19px ${F}`, '#FEFBF1');
+    txt(p.m ? 'Joined' : 'Not joined yet', W - P, y, `600 12px ${F}`, p.m ? '#A9C48C' : 'rgba(244,244,244,.5)', 'right');
+    if (p.other) { y += 22; txt(p.other, P, y, `400 14px ${F}`, 'rgba(244,244,244,.56)'); }
+    y += 10;
+    const fr = rowsOf(p);
+    if (!fr.length) { y += 34; txt('No flights added yet', P, y, `400 15px ${F}`, 'rgba(244,244,244,.5)'); }
+    for (const r of fr) {
+      y += 34; const [dd, code, city, tm, no] = line(r);
+      txt(dd, P, y, `600 15px ${F}`, '#E4AA7C');
+      txt(code, P + 90, y, `700 15px ${F}`, '#FEFBF1');
+      txt(city, P + 220, y, `400 14px ${F}`, 'rgba(244,244,244,.72)');
+      txt(tm, P + 640, y, `400 15px ${F}`, '#F4F4F4');
+      txt(no, W - P, y, `600 15px ${F}`, '#F4F4F4', 'right');
+    }
+    y += 44;
+  }
+  txt(`Made ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · flights each traveler added on the expedition site`, P, H - 34, `400 12px ${F}`, 'rgba(244,244,244,.45)');
+  c.toBlob(b => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+    a.download = `flights-${t.slug}-${new Date().toISOString().slice(0, 10)}.png`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, 'image/png');
 }
 let lastPhotos = [];
 // a browser that has opened an expedition keeps its code (mw-tour-<slug>-code): offer it, so nothing has to be typed
@@ -267,10 +318,10 @@ function render(photos) {
         <p class="hint">Needed only once. The code is checked against the expedition before saving; after that travelers join with this code + their name.</p>`}
       <p class="msg" data-msg role="status"></p>
 
-      <div class="trh"><h3>Travelers · ${trav.length}</h3>${ready ? `<button class="plus" type="button" data-plus aria-label="Add a traveler" title="Add a traveler"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg></button>` : ''}</div>
+      <div class="trh"><h3>Travelers · ${trav.length}</h3><span class="trb">${ready && flightsBy && rows.length ? '<button class="btn ghost small" type="button" data-flpng>Download flights (PNG)</button>' : ''}${ready ? `<button class="plus" type="button" data-plus aria-label="Add a traveler" title="Add a traveler"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg></button>` : ''}</span></div>
       ${ready ? `<form class="add" data-addform ${openAdd === t.slug ? '' : 'hidden'}><input data-names type="text" placeholder="Full name (English)" autocomplete="off" spellcheck="false" aria-label="Traveler's full name"><input data-other type="text" dir="auto" placeholder="Name in another language (optional)" autocomplete="off" spellcheck="false" aria-label="The same name in another language"><button class="btn small" type="submit">Add</button></form>` : ''}
       ${rows.length ? `<div class="tbl"><table><thead><tr><th>Name</th><th>Status</th><th>Last active</th><th>Photos</th><th></th></tr></thead><tbody>
-        ${rows.map(x => `<tr><td><a class="who" href="../${esc(t.path)}?as=${esc(x.m ? x.m.id : x.t.id)}" target="_blank" rel="noopener" title="Open ${esc(x.name)}'s view">${esc(x.name)}</a>${x.t && (x.t.other_names || []).length ? `<span class="alt"><bdi>${esc(x.t.other_names.join(' · '))}</bdi></span>` : ''}${flightsHTML(x.m)}</td>
+        ${rows.map(x => `<tr><td><a class="who" href="../${esc(t.path)}?as=${esc(x.m ? x.m.id : x.t.id)}" target="_blank" rel="noopener" title="Open ${esc(x.name)}'s view">${esc(x.name)}</a>${flightsHTML(x.m)}${x.t && (x.t.other_names || []).length ? `<span class="alt"><bdi>${esc(x.t.other_names.join(' · '))}</bdi></span>` : ''}</td>
           <td><span class="st ${x.m ? (x.t ? 'in' : 'extra') : 'wait'}">${x.m ? (x.t ? 'Joined' : 'Not on list') : 'Not joined yet'}</span></td>
           <td>${x.m ? fmt(x.m.last_seen) : '–'}</td><td>${x.m ? x.m.photos : '–'}</td>
           <td class="mn"><button class="dots" type="button" data-menu aria-label="More for ${esc(x.name)}" title="More"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
@@ -303,6 +354,7 @@ $('#tours').addEventListener('click', async e => {
       say(msg, 'Connected.', 'ok'); await load();
     } catch (err) { btn.disabled = false; say(msg, 'Could not save: ' + (err.message || err), 'err'); }
   }
+  if (btn.matches('[data-flpng]')) { flightsPNG(t, btn); return; }
   if (btn.matches('[data-fltog]')) { showFlights(btn.dataset.name, btn.nextElementSibling.innerHTML, btn); return; }
   if (btn.matches('[data-chcode]')) {
     btn.closest('.menu').hidden = true;
