@@ -99,6 +99,13 @@ textarea:focus{outline:none;border-color:var(--gold)}
 .flbtn:hover{border-color:var(--gold)}
 .fls{display:grid;gap:2px;margin-top:6px}
 .fls[hidden]{display:none}
+.flpop{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(5,5,4,.66);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.flcard{position:relative;width:min(440px,100%);display:grid;gap:6px;padding:22px 20px 20px;border-radius:20px;background:#1B1814;border:1px solid rgba(254,251,241,.16);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.flcard h2{margin:0 0 6px;padding-inline-end:40px;font-size:20px}
+.flcard .fls{gap:8px;margin:0}
+.flcard .fl{font-size:14.5px;white-space:normal;padding-block:8px;border-top:1px solid rgba(254,251,241,.08)}
+.flx{position:absolute;top:12px;inset-inline-end:12px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(254,251,241,.2);background:none;color:var(--paper);font-size:20px;line-height:1;cursor:pointer}
+.flx:hover{border-color:var(--gold)}
 .fl{font-size:12.5px;color:var(--muted);white-space:nowrap}
 .fl b{color:var(--paper);font-weight:600}
 .st{font:600 10.5px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
@@ -209,8 +216,20 @@ const fday = iso => iso ? new Date(iso + 'T12:00:00').toLocaleDateString('en-GB'
 function flightsHTML(m) {
   const f = m && flightsBy && flightsBy[m.id];
   if (!f || !f.length) return '';
-  return `<button class="flbtn" type="button" data-fltog aria-expanded="false">See flight details · ${f.length}</button><span class="fls" hidden>` + f.slice().sort((a, b) => ((a.iso || '') + (a.time || '')).localeCompare((b.iso || '') + (b.time || '')))
+  return `<button class="flbtn" type="button" data-fltog data-name="${esc(m.name)}" aria-haspopup="dialog">See flight details · ${f.length}</button><span class="fls" hidden>` + f.slice().sort((a, b) => ((a.iso || '') + (a.time || '')).localeCompare((b.iso || '') + (b.time || '')))
     .map(r => `<span class="fl">${esc(fday(r.iso))} · <b>${esc(r.from || '')} → ${esc(r.to || '')}</b>${r.time ? ' · ' + esc(r.time) + (r.arrive ? '–' + esc(r.arrive) : '') : ''}${r.flight ? ' · ' + esc(r.flight) : ''}</span>`).join('') + '</span>';
+}
+// a traveler's flights in a small window, closed with × (or Escape, or a tap outside)
+function showFlights(name, rows, from) {
+  const v = document.createElement('div'); v.className = 'flpop';
+  v.innerHTML = `<div class="flcard" role="dialog" aria-modal="true" aria-labelledby="flh"><button class="flx" type="button" aria-label="Close">×</button>
+    <h3>Flights</h3><h2 id="flh">${esc(name)}</h2><div class="fls">${rows}</div></div>`;
+  const close = () => { v.remove(); removeEventListener('keydown', key); from && from.focus(); };
+  const key = e => { if (e.key === 'Escape') close(); };
+  v.querySelector('.flx').onclick = close;
+  v.addEventListener('click', e => { if (e.target === v) close(); });
+  addEventListener('keydown', key);
+  document.body.appendChild(v); v.querySelector('.flx').focus();
 }
 let lastPhotos = [];
 // a browser that has opened an expedition keeps its code (mw-tour-<slug>-code): offer it, so nothing has to be typed
@@ -284,12 +303,7 @@ $('#tours').addEventListener('click', async e => {
       say(msg, 'Connected.', 'ok'); await load();
     } catch (err) { btn.disabled = false; say(msg, 'Could not save: ' + (err.message || err), 'err'); }
   }
-  if (btn.matches('[data-fltog]')) {
-    const box = btn.nextElementSibling, open = box.hidden;
-    box.hidden = !open; btn.setAttribute('aria-expanded', open);
-    btn.textContent = (open ? 'Hide flight details · ' : 'See flight details · ') + box.children.length;
-    return;
-  }
+  if (btn.matches('[data-fltog]')) { showFlights(btn.dataset.name, btn.nextElementSibling.innerHTML, btn); return; }
   if (btn.matches('[data-chcode]')) {
     btn.closest('.menu').hidden = true;
     const f = card.querySelector('[data-codeform]'); f.hidden = !f.hidden;
