@@ -1,0 +1,154 @@
+-- =====================================================================
+-- MW Photo Tours · update: travelers send their trip photos to Matan's Google Drive
+-- Supabase → SQL Editor → New query → paste this whole file → Run. Safe to run more than once. (Run 19.11.2026.)
+--
+-- How it works
+--  • On the tour page a traveler picks photos (JPEG, phone or camera RAW). Each file goes straight from their
+--    device into Google Drive at full size, through the Edge Function "trip-photos" (code: supabase/functions/trip-photos).
+--  • Every photo gets a row here. The traveler's own device names the subject with free image models (in
+--    assets/tripphotos.js; nothing goes to an AI service). A job runs every minute and the function renames the file
+--    and moves it to  <Tour> / <Subject> / <Traveler> /
+--    named  Name_Subject_DayN_Place_0001.ext. Unsure photos go to  <Tour> / Needs Review / <Traveler>.
+--  • Travelers never get access to the Drive folder, so nobody can change or delete anyone else's photos.
+--  • Only the Edge Function (service role) reads and writes these tables. The admin page reads counts through admin_trip_photos().
+-- =====================================================================
+
+-- 1. One row per photo sent
+create table if not exists public.trip_photos (
+  id           uuid primary key default gen_random_uuid(),
+  tour_slug    text not null references public.tours (slug) on delete cascade,
+  member_id    uuid references public.members (id) on delete set null,
+  uploader     text not null,                 -- name used in folders and file names, e.g. 'Jane Smith'
+  seq          integer not null,              -- 1, 2, 3 … for each traveler in each tour (the _0001 in the name)
+  file_key     text not null,                 -- original name + size: the same file is never sent twice
+  orig_name    text not null,
+  mime         text,
+  size         bigint not null,
+  ext          text not null,
+  taken        text,                          -- camera date and time, 'YYYY-MM-DD HH:MM'
+  day          integer,                       -- tour day, from the camera date and the tour plan
+  place        text,                          -- from the photo's GPS or the tour plan for that day
+  hints        text,                          -- what the tour expects to see (the field cards), kept for reference
+  preview      text,                          -- (unused since sorting moved onto the device)
+  session_url  text,                          -- Google Drive upload link (lets an upload continue after a drop)
+  drive_id     text,
+  status       text not null default 'started' check (status in ('started', 'uploaded', 'sorting', 'sorted', 'review')),
+  object       text,                          -- the subject folder, e.g. 'Arctic Fox'
+  confidence   real,
+  ai_note      text,
+  final_name   text,
+  tries        integer not null default 0,
+  lease_at     timestamptz,
+  error        text,
+  created_at   timestamptz not null default now(),
+  uploaded_at  timestamptz,
+  sorted_at    timestamptz,
+  unique (tour_slug, member_id, file_key),
+  unique (tour_slug, uploader, seq)
+);
+create index if not exists trip_photos_queue_idx on public.trip_photos (status, uploaded_at);
+alter table public.trip_photos enable row level security;
+revoke all on public.trip_photos from anon, authenticated;
+
+-- 2. Drive folders already made (so each one is created once)
+create table if not exists public.trip_photo_folders (
+  tour_slug  text not null,
+  path       text not null,                   -- '' = the tour folder, 'Arctic Fox/Jane Smith', 'Incoming' …
+  folder_id  text not null,
+  primary key (tour_slug, path)
+);
+alter table public.trip_photo_folders enable row level security;
+revoke all on public.trip_photo_folders from anon, authenticated;
+
+-- 3. Previews bucket (no longer used since sorting moved onto the traveler's device; harmless to keep).
+insert into storage.buckets (id, name, public) values ('trip-photo-previews', 'trip-photo-previews', false)
+on conflict (id) do nothing;
+
+-- 4. A new photo: find the traveler from their signed-in browser, give it the next number. Returns the row.
+--    Called only by the Edge Function, with the browser's user id.
+create or replace function public.trip_photo_claim(
+  p_user uuid, p_slug text, p_key text, p_name text, p_mime text, p_size bigint, p_ext text,
+  p_taken text, p_day integer, p_place text, p_hints text) returns json
+language plpgsql security definer set search_path = public as $$
+declare v_member uuid; v_uploader text; v_seq integer; r public.trip_photos;
+begin
+  select m.id into v_member from public.member_devices d join public.members m on m.id = d.member_id
+   where d.user_id = p_user and m.tour_slug = p_slug limit 1;
+  if v_member is null then raise exception 'not_member'; end if;
+
+  select * into r from public.trip_photos where tour_slug = p_slug and member_id = v_member and file_key = p_key;
+  if found then return row_to_json(r); end if;
+
+  -- the name in Latin letters when the traveler list has one (file names), otherwise the name as joined
+  select coalesce(
+           (select n from unnest(array[t.name] || t.other_names) n where n ~ '[A-Za-z]' and n !~ '[֐-׿]' limit 1),
+           t.name)
+    into v_uploader
+    from public.members m left join public.tour_travelers t on t.id = m.traveler_id where m.id = v_member;
+  if v_uploader is null then select name into v_uploader from public.members where id = v_member; end if;
+  v_uploader := btrim(regexp_replace(v_uploader, '\s+', ' ', 'g'));
+
+  perform pg_advisory_xact_lock(hashtext('trip_photos:' || p_slug || ':' || v_uploader));
+  select coalesce(max(seq), 0) + 1 into v_seq from public.trip_photos where tour_slug = p_slug and uploader = v_uploader;
+  insert into public.trip_photos (tour_slug, member_id, uploader, seq, file_key, orig_name, mime, size, ext, taken, day, place, hints)
+  values (p_slug, v_member, v_uploader, v_seq, p_key, left(p_name, 200), left(p_mime, 80), p_size, lower(left(p_ext, 10)),
+          left(p_taken, 20), p_day, left(p_place, 60), left(p_hints, 600))
+  returning * into r;
+  return row_to_json(r);
+end $$;
+revoke execute on function public.trip_photo_claim(uuid, text, text, text, text, bigint, text, text, integer, text, text) from public, anon, authenticated;
+
+-- 5. The filing job takes a few photos at a time (a photo stuck for 10 minutes is taken again)
+create or replace function public.trip_photo_lease(p_n integer) returns setof public.trip_photos
+language sql security definer set search_path = public as $$
+  update public.trip_photos t set status = 'sorting', lease_at = now(), tries = t.tries + 1
+   where t.id in (select id from public.trip_photos
+                   where status = 'uploaded' or (status = 'sorting' and lease_at < now() - interval '10 minutes')
+                   order by uploaded_at nulls last limit p_n for update skip locked)
+  returning t.*;
+$$;
+revoke execute on function public.trip_photo_lease(integer) from public, anon, authenticated;
+
+-- 6. What a traveler has sent in this tour (shown on the page: "You've sent 42 photos")
+create or replace function public.my_trip_photos(p_slug text) returns json
+language sql stable security definer set search_path = public as $$
+  select json_build_object('sent', count(*) filter (where status <> 'started'), 'keys', coalesce(json_agg(file_key) filter (where status <> 'started'), '[]'::json))
+    from public.trip_photos where tour_slug = p_slug and member_id = public.my_member(p_slug);
+$$;
+revoke execute on function public.my_trip_photos(text) from public, anon;
+grant execute on function public.my_trip_photos(text) to authenticated;
+
+-- 7. The admin page: per tour, how many were sent, sorted, need review, still waiting, and the Drive folder
+create or replace function public.admin_trip_photos() returns json
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_tour_admin() then raise exception 'not_admin'; end if;
+  return coalesce((
+    select json_agg(json_build_object('tour_slug', s.tour_slug, 'sent', s.sent, 'sorted', s.sorted, 'review', s.review,
+                                      'waiting', s.waiting, 'people', s.people,
+                                      'folder', (select folder_id from public.trip_photo_folders f where f.tour_slug = s.tour_slug and f.path = ''),
+                                      'review_folder', (select folder_id from public.trip_photo_folders f where f.tour_slug = s.tour_slug and f.path = 'Needs Review')))
+      from (select tour_slug,
+                   count(*) filter (where status <> 'started') sent,
+                   count(*) filter (where status = 'sorted') sorted,
+                   count(*) filter (where status = 'review') review,
+                   count(*) filter (where status in ('uploaded', 'sorting')) waiting,
+                   count(distinct member_id) filter (where status <> 'started') people
+              from public.trip_photos group by tour_slug) s), '[]'::json);
+end $$;
+revoke execute on function public.admin_trip_photos() from public, anon;
+grant execute on function public.admin_trip_photos() to authenticated;
+
+-- 8. Every minute, when photos are waiting, wake the filing job
+create extension if not exists pg_net;
+create extension if not exists pg_cron;
+select cron.unschedule('trip-photos-sort') where exists (select 1 from cron.job where jobname = 'trip-photos-sort');
+select cron.schedule('trip-photos-sort', '* * * * *', $job$
+  select net.http_post(
+    url     := 'https://uiydebfzuxnxjqcnrylv.supabase.co/functions/v1/trip-photos',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpeWRlYmZ6dXhueGpxY25yeWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNzY2MjksImV4cCI6MjEwNjc1MjYyOX0.JwQ2bAjMrZZCnhFq79V8W5lnzcNz-zpf8IW6xFC4Mko"}'::jsonb,
+    body    := '{"action": "sort"}'::jsonb,
+    timeout_milliseconds := 5000)
+  where exists (select 1 from public.trip_photos
+                 where status = 'uploaded' or (status = 'sorting' and lease_at < now() - interval '10 minutes'));
+$job$);

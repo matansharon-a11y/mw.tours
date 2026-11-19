@@ -641,6 +641,8 @@ function keepOffline() {
    '../assets/airports.js?v=1', 'sw.js'].forEach(add);
   navigator.serviceWorker.ready.then(reg => reg.active && reg.active.postMessage({ type: 'mw-keep', urls: [...urls] })).catch(() => {});
 }
+// for assets/tripphotos.js (sending trip photos to Drive): who is signed in, and a connected client
+window.MWM = { slug: SLUG, member: () => AS ? null : member, client: async () => { await session(); return sb; } };
 function boot() {
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   document.body.appendChild(picker);

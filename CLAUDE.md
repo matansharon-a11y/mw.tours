@@ -125,3 +125,30 @@ commit finished work straight to `main`; there is no build step.
 - `members.js` `keepOffline()`: once the expedition is open (and online), sends every map layer, photo, thumbnail and font the page uses,
   so the whole expedition opens later without signal. Bump `V` in sw-core.js to drop everything saved before.
 
+
+## Trip photos → Google Drive (sorted on the traveler's device, free)
+Travelers send their full-size photos (JPEG, phone, camera RAW) to the team's Drive from the tour page: a floating gold +
+bubble on every tab (`#mw-tpb`, draggable like AssistiveTouch, snaps to the nearest side, position kept per device, hidden during
+the opening route; a one-time label "Add your trip photos here") opens "Drop all your trip photos here" with a security note
+(lock: encrypted, private archive, only the MW Photo Tours team sees them). Also "Add my trip photos" in the name menu.
+The bubble stays hidden until the function's `ping` says all secrets are set. No mention of Matan in this UI (user's choice, 19.11.2026).
+- Page: `assets/tripphotos.js` (every tour page, after members.js). On the device: camera date + GPS → tour day and place
+  (from `window.MW_TRIP`, set by each tour page right after it unlocks: days with dates and overnight place, map places,
+  field-card species); a 1024px preview; what's in the photo, with free models from Transformers.js 4.3.2 (jsdelivr `+esm`):
+  YOLOS-tiny finds people first (→ People & Group), then CLIP ViT-B/32 decides the kind (animal / landscape / night / food /
+  other) and then the species (the tour's field cards + Other Birds/Animals) or scene. Not sure → Needs Review.
+  Tested on 26 tour photos (19.11.2026): 18 sorted, 0 wrong species, the rest to Needs Review.
+  Nothing goes to an AI service. The file itself goes straight to Google (resumable upload, continues after a drop).
+- `assets/clip-labels.json`: CLIP's text side for all descriptions, worked out ahead of time so devices download only the image
+  side (~90 MB + ~10 MB, once). Species of tours not in it (made from Kerkini + Ladakh field cards) are worked out on the device
+  (another ~65 MB, once). When adding a tour or changing descriptions, regenerate it (same prompts as in tripphotos.js).
+- Server: Edge Function `trip-photos` (`supabase/functions/trip-photos/index.ts`, deployed from the Supabase dashboard:
+  Edge Functions → trip-photos → Code). It only names and files; no AI. Database: `supabase-update-trip-photos.txt` (run).
+  pg_cron wakes the filing job every minute while photos wait.
+- Drive: Shared Drive "MWP Trip Photos" (contact@ is Manager). Layout `<Tour title Year>/<Subject>/<Traveler>/Traveler_Subject_DayN_Place_0001.ext`;
+  unsure → `<Tour>/Needs Review/<Traveler>/`; waiting → `<Tour>/Incoming`. Numbers are per traveler per tour, never reused;
+  the job only renames and moves, never deletes. A wrong folder is fixed by moving the file in Drive.
+- Google: Cloud project `mwp-trip-photos` (org matanwildphotography.com), Drive API on, sign-in screen Internal,
+  OAuth client "Trip photos uploader" (Web, redirect OAuth Playground), refresh token made with jlouise@ (scope drive).
+- Secrets (Supabase → Edge Functions → Secrets): GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, DRIVE_FOLDER_ID.
+- Admin: each tour shows "Trip photos in Drive" (sent / sorted / to check) with links to the folders.

@@ -49,6 +49,7 @@ input.code{font:600 16px/1 var(--label);letter-spacing:.12em;text-transform:uppe
 .btn.small{min-height:36px;padding-inline:14px;font-size:13.5px}
 .btn.danger{border-color:rgba(240,138,122,.55);background:none;color:#F7B2A6}
 .hint{margin:0;font-size:13.5px;color:var(--faint)}
+.trip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-bottom:8px;font-size:14px}.trip b{color:var(--off)}.trip .rv b{color:var(--gold)}.trip .btn{min-height:36px}
 .msg{margin:0;min-height:1.4em;font-size:14.5px}
 .msg.err{color:var(--red)} .msg.ok{color:var(--leaf)}
 .tour-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
@@ -151,7 +152,15 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const norm = c => String(c || '').toUpperCase().replace(/[\s\-–_.]/g, '');
 const fmt = d => d ? new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–';
 const sb = window.supabase.createClient(CFG.url, CFG.key, { auth: { persistSession: true, storageKey: 'mw-admin-session', detectSessionInUrl: false } });
-let list = [], urls = {}, openAdd = null, flightsBy = null;
+// trip photos in Google Drive: how many, sorted, to check, and links to the folders
+const driveLink = id => 'https://drive.google.com/drive/folders/' + encodeURIComponent(id);
+function tripHTML(r) {
+  if (!r || !r.sent) return '<h3>Trip photos in Drive · 0</h3><p class="empty">None yet. Travelers send theirs from the expedition page (Field → Send photos).</p>';
+  return `<h3>Trip photos in Drive · ${r.sent}</h3><div class="trip"><span><b>${r.sorted}</b> sorted</span><span${r.review ? ' class="rv"' : ''}><b>${r.review}</b> to check</span>${r.waiting ? `<span><b>${r.waiting}</b> being filed</span>` : ''}<span><b>${r.people}</b> ${r.people === 1 ? 'traveler' : 'travelers'}</span>
+    ${r.folder ? `<a class="btn ghost small" href="${driveLink(r.folder)}" target="_blank" rel="noopener">Open in Drive</a>` : ''}${r.review && r.review_folder ? `<a class="btn ghost small" href="${driveLink(r.review_folder)}" target="_blank" rel="noopener">Needs Review</a>` : ''}</div>
+    <p class="hint">A wrongly sorted photo can simply be moved to the right folder in Drive. Its name stays the same.</p>`;
+}
+let list = [], urls = {}, openAdd = null, flightsBy = null, tripBy = null;
 
 // check a code really opens an expedition page (same lock the pages use: PBKDF2-SHA256 → AES-GCM)
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -173,6 +182,8 @@ async function load() {
   // each traveler's own flights (needs supabase-update-admin-flights.txt; null = not run yet)
   const fl = await sb.rpc('admin_flights');
   flightsBy = fl.error ? null : Object.fromEntries((fl.data || []).map(r => [r.member_id, Array.isArray(r.flights) ? r.flights : []]));
+  const tph = await sb.rpc('admin_trip_photos');   // trip photos sent to Google Drive (supabase-update-trip-photos.txt)
+  tripBy = tph.error ? null : Object.fromEntries((tph.data || []).map(r => [r.tour_slug, r]));
   const today = new Date().toISOString().slice(0, 10);
   const when = t => t.end && today > t.end ? 'past' : t.start && today >= t.start ? 'now' : 'soon';
   const rank = { now: 0, soon: 1, past: 2 };
@@ -198,6 +209,7 @@ async function checkSetup(tours) {
       todo.push('<b>Turn on anonymous sign-ins.</b> Supabase → Authentication → Sign In / Providers → "Allow anonymous sign-ins" → Save. Without it, travelers open the expedition but are never registered, so they don\u2019t appear here.');
   } catch (e) {}
   if (tours.some(t => t.ready && !('code_edit' in t))) todo.push('<b>Run supabase-update-change-code.txt</b> in Supabase → SQL Editor, to change an expedition\u2019s code here.');
+  if (tripBy === null) todo.push('<b>Run supabase-update-trip-photos.txt</b> in Supabase → SQL Editor, so travelers can send their trip photos to Google Drive.');
   if (flightsBy === null) todo.push('<b>Run supabase-update-admin-flights.txt</b> in Supabase → SQL Editor, to see each traveler\u2019s flights here.');
   if (tours.length && !('travelers' in tours[0])) todo.push('<b>Run supabase-update-travelers.txt</b> in Supabase → SQL Editor (the traveler list).');
   const v = await sb.rpc('admin_view_member', { p_member: '00000000-0000-0000-0000-000000000000' });
@@ -328,6 +340,8 @@ function render(photos) {
             <div class="menu" hidden>${x.t ? `<button type="button" data-edit="${esc(x.t.id)}" data-name="${esc(x.name)}" data-cur="${esc((x.t.other_names || []).join(', '))}">Edit</button>` : ''}
             <button type="button" class="red" ${x.t ? `data-rmt="${esc(x.t.id)}"` : `data-rm="${esc(x.m.id)}"`} data-name="${esc(x.name)}">Remove</button></div></td></tr>`).join('')}
         </tbody></table></div>` : `<p class="empty">${ready ? 'No travelers yet. Only names on this list can join: tap + to add one.' : 'No travelers yet.'}</p>`}
+
+      ${ready && tripBy ? tripHTML(tripBy[t.slug]) : ''}
 
       <h3>Shared photos · ${tp.length}</h3>
       ${tp.length ? `<div class="gal">${tp.map(p => `<figure><img loading="lazy" src="${esc(urls[p.path.replace(/\.jpg$/, '_t.jpg')] || urls[p.path] || '')}" data-full="${esc(urls[p.path] || '')}" alt="">
