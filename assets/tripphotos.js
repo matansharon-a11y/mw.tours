@@ -3,7 +3,7 @@
  * Loaded by every expedition page, after members.js. A signed-in traveler picks any number of photos (JPEG, phone
  * photos or camera RAW). Each file goes from their device straight into Matan's Google Drive at full size, through
  * the Supabase Edge Function "trip-photos" (supabase/functions/trip-photos), which names and files them:
- *   <Tour> / <Subject> / <Traveler> / Name_Subject_DayN_Place_0001.ext   (unsure → <Tour> / Needs Review / <Traveler>)
+ *   <Tour> / <Subject> / <Traveler> / Name_Subject_DayN_Place_0001.ext   (unsure → <Tour> / <Best guess> / Not sure / <Traveler>)
  * On the device we work out what the server can't: the camera date and GPS (→ tour day and place, from the tour plan
  * the page exposes as window.MW_TRIP), a small preview, and what is in the photo (free image models running on the
  * device, see below; nothing is sent to an AI service). The photo itself is never changed.
@@ -115,7 +115,7 @@ async function preview(file) {
 // 1. A small person finder (YOLOS-tiny, ~10 MB): a clear person in the photo → People & Group.
 // 2. CLIP (~90 MB), in two steps, each comparing the photo with a few descriptions: first what kind of photo it is
 //    (animal, landscape, night sky, food, other), then which one: this tour's species (its field cards) or the scene.
-// When a step isn't clearly sure, the photo goes to Needs Review rather than a guess.
+// When a step isn't clearly sure, the photo still goes with its best guess, in a "Not sure" folder inside it.
 // CLIP's words' side is worked out ahead of time (assets/clip-labels.json), so devices download only its image side,
 // once (kept by the browser). Words missing from that file load the words' side too (~65 MB, once per device).
 const TF = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/+esm';
@@ -198,7 +198,7 @@ async function whatsIn(blob) {
       const p = found.filter(o => o.label === 'person' && o.score >= PERSON.score)
         .map(o => ({ s: o.score, a: (o.box.xmax - o.box.xmin) * (o.box.ymax - o.box.ymin) }))
         .sort((a, b) => b.a - a.a)[0];
-      if (p && p.a >= PERSON.area) return { object: 'People & Group', confidence: +p.s.toFixed(3), note: `person found ${Math.round(p.s * 100)}%` };
+      if (p && p.a >= PERSON.area) return { object: 'People & Group', sure: true, confidence: +p.s.toFixed(3), note: `person found ${Math.round(p.s * 100)}%` };
     } catch (e) {}
   }
   // 2. what kind of photo, then which one
@@ -215,7 +215,7 @@ async function whatsIn(blob) {
   }
   const p = r ? r[0].p : k.p;
   const note = `${k.name} ${Math.round(k.p * 100)}%` + (r ? ' → ' + r.slice(0, 3).map(x => `${x.name} ${Math.round(x.p * 100)}%`).join(', ') : '');
-  return { object: sure ? name : null, confidence: +p.toFixed(3), note };
+  return { object: name, sure, confidence: +p.toFixed(3), note };   // not sure: still its best guess, filed under <guess>/Not sure
 }
 
 // ---------- tour day and place, from the camera date / GPS and the tour plan ----------
@@ -300,7 +300,7 @@ async function one(it) {
   if (pv) { it.state = 'look'; draw(); try { ai = await whatsIn(pv.blob); } catch (e) { ai = null; } }
   const base = { key: it.key, name: f.name, mime: f.type || (RAW.test(f.name) ? 'image/x-raw' : 'application/octet-stream'), size: f.size,
                  taken: info.taken || null, day: where.day ?? null, place: where.place || null, hints,
-                 object: ai && ai.object, confidence: ai ? ai.confidence : null, note: ai ? ai.note : null };
+                 object: ai && ai.object, sure: !!(ai && ai.sure), confidence: ai ? ai.confidence : null, note: ai ? ai.note : null };
   let r = await call({ action: 'start', ...base, preview: pv && pv.b64 });
   if (r.status !== 'started') { it.state = 'already'; sentKeys.add(it.key); return; }
   it.state = 'send'; draw();

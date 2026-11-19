@@ -33,7 +33,8 @@ create table if not exists public.trip_photos (
   session_url  text,                          -- Google Drive upload link (lets an upload continue after a drop)
   drive_id     text,
   status       text not null default 'started' check (status in ('started', 'uploaded', 'sorting', 'sorted', 'review')),
-  object       text,                          -- the subject folder, e.g. 'Arctic Fox'
+  object       text,                          -- the subject folder (the device's best guess), e.g. 'Arctic Fox'
+  sure         boolean,                       -- false: filed under <object>/Not sure/<traveler>
   confidence   real,
   ai_note      text,
   final_name   text,
@@ -46,6 +47,7 @@ create table if not exists public.trip_photos (
   unique (tour_slug, member_id, file_key),
   unique (tour_slug, uploader, seq)
 );
+alter table public.trip_photos add column if not exists sure boolean;   -- added 19.11.2026 (unsure photos go with their best guess)
 create index if not exists trip_photos_queue_idx on public.trip_photos (status, uploaded_at);
 alter table public.trip_photos enable row level security;
 revoke all on public.trip_photos from anon, authenticated;
@@ -127,7 +129,7 @@ begin
     select json_agg(json_build_object('tour_slug', s.tour_slug, 'sent', s.sent, 'sorted', s.sorted, 'review', s.review,
                                       'waiting', s.waiting, 'people', s.people,
                                       'folder', (select folder_id from public.trip_photo_folders f where f.tour_slug = s.tour_slug and f.path = ''),
-                                      'review_folder', (select folder_id from public.trip_photo_folders f where f.tour_slug = s.tour_slug and f.path = 'Needs Review')))
+                                      'review_folder', (select folder_id from public.trip_photo_folders f where f.tour_slug = s.tour_slug and f.path = 'Not sure')))
       from (select tour_slug,
                    count(*) filter (where status <> 'started') sent,
                    count(*) filter (where status = 'sorted') sorted,

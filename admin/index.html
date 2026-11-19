@@ -156,9 +156,9 @@ const sb = window.supabase.createClient(CFG.url, CFG.key, { auth: { persistSessi
 const driveLink = id => 'https://drive.google.com/drive/folders/' + encodeURIComponent(id);
 function tripHTML(r) {
   if (!r || !r.sent) return '<h3>Trip photos in Drive · 0</h3><p class="empty">None yet. Travelers send theirs from the expedition page (Field → Send photos).</p>';
-  return `<h3>Trip photos in Drive · ${r.sent}</h3><div class="trip"><span><b>${r.sorted}</b> sorted</span><span${r.review ? ' class="rv"' : ''}><b>${r.review}</b> to check</span>${r.waiting ? `<span><b>${r.waiting}</b> being filed</span>` : ''}<span><b>${r.people}</b> ${r.people === 1 ? 'traveler' : 'travelers'}</span>
-    ${r.folder ? `<a class="btn ghost small" href="${driveLink(r.folder)}" target="_blank" rel="noopener">Open in Drive</a>` : ''}${r.review && r.review_folder ? `<a class="btn ghost small" href="${driveLink(r.review_folder)}" target="_blank" rel="noopener">Needs Review</a>` : ''}</div>
-    <p class="hint">A wrongly sorted photo can simply be moved to the right folder in Drive. Its name stays the same.</p>`;
+  return `<h3>Trip photos in Drive · ${r.sent}</h3><div class="trip"><span><b>${r.sorted}</b> sorted</span><span${r.review ? ' class="rv"' : ''}><b>${r.review}</b> not sure</span>${r.waiting ? `<span><b>${r.waiting}</b> being filed</span>` : ''}<span><b>${r.people}</b> ${r.people === 1 ? 'traveler' : 'travelers'}</span>
+    ${r.folder ? `<a class="btn ghost small" href="${driveLink(r.folder)}" target="_blank" rel="noopener">Open in Drive</a>` : ''}${r.review && r.review_folder ? `<a class="btn ghost small" href="${driveLink(r.review_folder)}" target="_blank" rel="noopener">Not sure (couldn’t look)</a>` : ''}</div>
+    <p class="hint">Photos the sorter wasn’t sure about sit in a “Not sure” folder inside their best-guess subject. Move a wrong one to the right folder in Drive; its name stays the same.</p>`;
 }
 let list = [], urls = {}, openAdd = null, flightsBy = null, tripBy = null;
 

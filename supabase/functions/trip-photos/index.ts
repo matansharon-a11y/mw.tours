@@ -11,7 +11,7 @@
 //
 // Actions (POST JSON):
 //   {action:'start', slug, key, name, mime, size, taken, day, place, hints, preview, object, confidence, note}
-//        a traveler starts sending one photo (object = the folder the device chose, or empty when it wasn't sure).
+//        a traveler starts sending one photo (object = the device's best guess; sure = whether it was confident).
 //        Returns {id, status, upload_url}: the browser then sends the file itself straight to Google (full size).
 //   {action:'done', id}    the browser finished sending; the file joins the filing queue.
 //   {action:'sort'}        the filing job (every minute from pg_cron, and right after 'done').
@@ -19,7 +19,8 @@
 //
 // Where photos go:  <Tour Year> / Incoming        while waiting to be filed (a minute or two)
 //                   <Tour Year> / <Subject> / <Traveler> / Traveler_Subject_DayN_Place_0001.ext
-//                   <Tour Year> / Needs Review / <Traveler> /  when the device wasn't sure (never a guess)
+//                   <Tour Year> / <Best guess> / Not sure / <Traveler> /  when the device wasn't sure (similar photos stay together)
+//                   <Tour Year> / Not sure / <Traveler> /  when the device couldn't look at the photo at all
 // Nothing is ever deleted or overwritten in Drive: every file has its own number, and the job only renames and moves.
 
 import { createClient } from "npm:@supabase/supabase-js@2.119.1";
@@ -126,7 +127,7 @@ type Row = {
   id: string; tour_slug: string; member_id: string; uploader: string; seq: number; ext: string; orig_name: string;
   mime: string | null; size: number; taken: string | null; day: number | null; place: string | null;
   session_url: string | null; drive_id: string | null; status: string; tries: number;
-  object: string | null; confidence: number | null; ai_note: string | null;
+  object: string | null; sure: boolean | null; confidence: number | null; ai_note: string | null;
 };
 
 async function userOf(req: Request) {
@@ -158,8 +159,10 @@ async function start(req: Request, body: any, origin: string | null) {
   if (!r.session_url) {
     const object = typeof body.object === "string" && body.object.trim() ? folderSafe(body.object) : null;
     const conf = Number(body.confidence);
+    // older pages sent an object only when sure; newer ones send their best guess and sure
+    const sure = object ? (typeof body.sure === "boolean" ? body.sure : true) : false;
     await db.from("trip_photos").update({
-      object, confidence: Number.isFinite(conf) ? conf : null, ai_note: body.note ? String(body.note).slice(0, 300) : null,
+      object, sure, confidence: Number.isFinite(conf) ? conf : null, ai_note: body.note ? String(body.note).slice(0, 300) : null,
     }).eq("id", r.id);
   }
 
@@ -220,21 +223,22 @@ async function sortOne(r: Row, existing: string[]) {
       const same = existing.find((e) => e.toLowerCase() === object!.toLowerCase());
       if (same) object = same; else existing.push(object);
     }
-    const path = object ? `${object}/${folderSafe(r.uploader)}` : `Needs Review/${folderSafe(r.uploader)}`;
+    const who = folderSafe(r.uploader), sure = !!object && r.sure !== false;
+    const path = !object ? `Not sure/${who}` : sure ? `${object}/${who}` : `${object}/Not sure/${who}`;
     const target = await folder(r.tour_slug, path);
     const inbox = await folder(r.tour_slug, "Incoming");
     const name = fileName(r, object);
     const desc = [
       `By ${r.uploader}`, r.day ? `Day ${r.day}` : "", r.place || "", r.taken ? `camera time ${r.taken}` : "",
       `original name ${r.orig_name}`,
-      r.ai_note ? `${object ? "sorted automatically" : "not sure, best matches"}: ${r.ai_note}` : "couldn't be checked automatically",
+      r.ai_note ? `${sure ? "sorted automatically" : "not sure, best guess"}: ${r.ai_note}` : "couldn't be checked automatically",
     ].filter(Boolean).join(" · ");
     await drive(`files/${r.drive_id}?addParents=${target}&removeParents=${inbox}&fields=id`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, description: desc }),
     });
     await db.from("trip_photos").update({
-      status: object ? "sorted" : "review", object, final_name: name, sorted_at: new Date().toISOString(), error: null,
+      status: sure ? "sorted" : "review", object, final_name: name, sorted_at: new Date().toISOString(), error: null,
     }).eq("id", r.id);
   } catch (e) {
     // try again on the next run; after 5 tries it stops and stays in Incoming, with the error on the row

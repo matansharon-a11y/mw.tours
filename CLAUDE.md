@@ -136,8 +136,9 @@ The bubble stays hidden until the function's `ping` says all secrets are set. No
   (from `window.MW_TRIP`, set by each tour page right after it unlocks: days with dates and overnight place, map places,
   field-card species); a 1024px preview; what's in the photo, with free models from Transformers.js 4.3.2 (jsdelivr `+esm`):
   YOLOS-tiny finds people first (→ People & Group), then CLIP ViT-B/32 decides the kind (animal / landscape / night / food /
-  other) and then the species (the tour's field cards + Other Birds/Animals) or scene. Not sure → Needs Review.
-  Tested on 26 tour photos (19.11.2026): 18 sorted, 0 wrong species, the rest to Needs Review.
+  other) and then the species (the tour's field cards + Other Birds/Animals) or scene. Not sure → still filed with its best
+  guess, in `<Best guess>/Not sure/<Traveler>/` (user's choice 19.11.2026: similar photos together, no review pile); couldn't look → `Not sure/<Traveler>/`.
+  Tested on 26 tour photos (19.11.2026): 18 sure and right, 0 sure-but-wrong; the other 8 were unsure (now filed under their best guess / Not sure).
   Nothing goes to an AI service. The file itself goes straight to Google (resumable upload, continues after a drop).
 - `assets/clip-labels.json`: CLIP's text side for all descriptions, worked out ahead of time so devices download only the image
   side (~90 MB + ~10 MB, once). Species of tours not in it (made from Kerkini + Ladakh field cards) are worked out on the device
@@ -146,7 +147,7 @@ The bubble stays hidden until the function's `ping` says all secrets are set. No
   Edge Functions → trip-photos → Code). It only names and files; no AI. Database: `supabase-update-trip-photos.txt` (run).
   pg_cron wakes the filing job every minute while photos wait.
 - Drive: Shared Drive "MWP Trip Photos" (contact@ is Manager). Layout `<Tour title Year>/<Subject>/<Traveler>/Traveler_Subject_DayN_Place_0001.ext`;
-  unsure → `<Tour>/Needs Review/<Traveler>/`; waiting → `<Tour>/Incoming`. Numbers are per traveler per tour, never reused;
+  unsure → `<Tour>/<Best guess>/Not sure/<Traveler>/`; waiting → `<Tour>/Incoming`. Numbers are per traveler per tour, never reused;
   the job only renames and moves, never deletes. A wrong folder is fixed by moving the file in Drive.
 - Google: Cloud project `mwp-trip-photos` (org matanwildphotography.com), Drive API on, sign-in screen Internal,
   OAuth client "Trip photos uploader" (Web, redirect OAuth Playground), refresh token made with jlouise@ (scope drive).
